@@ -1,0 +1,235 @@
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { combinedInsertSchema, CombinedInsert } from "@shared/schema";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+
+interface AdminBookFormProps {
+  form: ReturnType<typeof useForm<CombinedInsert>>;
+  onSubmit: (data: CombinedInsert) => void;
+  isSubmitting: boolean;
+}
+
+const AdminBookForm = ({ form, onSubmit, isSubmitting }: AdminBookFormProps) => {
+  // Book categories for select dropdown
+  const categories = [
+    "ビジネス",
+    "社会科学",
+    "歴史",
+    "SF",
+    "科学",
+    "小説",
+    "投資",
+    "経営",
+    "自己啓発",
+    "哲学",
+  ];
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Book Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-800 border-b pb-2">書籍情報</h3>
+            
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>書籍タイトル <span className="text-red-500">*</span></FormLabel>
+                  <FormControl>
+                    <Input placeholder="書籍タイトルを入力" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="author"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>著者名 <span className="text-red-500">*</span></FormLabel>
+                  <FormControl>
+                    <Input placeholder="著者名を入力" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>カテゴリー</FormLabel>
+                  <FormControl>
+                    <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      {...field}
+                    >
+                      <option value="">カテゴリーを選択</option>
+                      {categories.map((category) => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))}
+                    </select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Recommender Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-800 border-b pb-2">推薦者情報</h3>
+            
+            <FormField
+              control={form.control}
+              name="recommenderName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>推薦者名 <span className="text-red-500">*</span></FormLabel>
+                  <FormControl>
+                    <Input placeholder="推薦者の名前を入力" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="recommenderOrg"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>推薦者の所属</FormLabel>
+                  <FormControl>
+                    <Input placeholder="所属組織や役職を入力" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="industry"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>業界</FormLabel>
+                  <FormControl>
+                    <Input placeholder="業界を入力（例：テクノロジー、金融）" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Recommendation Details */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium text-gray-800 border-b pb-2">推薦情報</h3>
+          
+          <FormField
+            control={form.control}
+            name="comment"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>推薦コメント</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="推薦者のコメントを入力"
+                    rows={3}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="recommendationDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>推薦時期</FormLabel>
+                  <FormControl>
+                    <Input placeholder="例：2020年" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="recommendationMedium"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>推薦媒体</FormLabel>
+                  <FormControl>
+                    <Input placeholder="例：インタビュー、ブログ" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="reason"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>推薦理由・背景</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="推薦の背景や理由を入力"
+                    rows={3}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="flex justify-end space-x-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => form.reset()}
+            disabled={isSubmitting}
+          >
+            リセット
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "保存中..." : "書籍を追加"}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+};
+
+export default AdminBookForm;
