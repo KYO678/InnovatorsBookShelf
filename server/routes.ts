@@ -222,12 +222,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid CSV data format or empty array' });
       }
       
-      // Use the importFromCSV method to process all items at once
-      await dataStorage.importFromCSV(items);
+      console.log(`Attempting to import ${items.length} items from CSV`);
+      
+      // Use the importFromCSV method to process all items at once and get actual import count
+      const importedCount = await dataStorage.importFromCSV(items);
       
       res.status(201).json({ 
-        message: `Successfully imported ${items.length} book recommendations`,
-        count: items.length
+        message: `Successfully imported ${importedCount} book recommendations`,
+        count: importedCount,
+        total: items.length,
+        skipped: items.length - importedCount
       });
     } catch (error) {
       console.error('Error importing from CSV:', error);

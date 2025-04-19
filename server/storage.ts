@@ -48,7 +48,7 @@ export interface IStorage {
   createCompleteRecommendation(data: CombinedInsert): Promise<CompleteRecommendation>;
   
   // Import from CSV
-  importFromCSV(items: BookRecommendationCSV[]): Promise<void>;
+  importFromCSV(items: BookRecommendationCSV[]): Promise<number>;
 }
 
 export class MemStorage implements IStorage {
@@ -248,9 +248,22 @@ export class MemStorage implements IStorage {
   }
 
   // Import from CSV
-  async importFromCSV(items: BookRecommendationCSV[]): Promise<void> {
+  async importFromCSV(items: BookRecommendationCSV[]): Promise<number> {
+    let successCount = 0;
+    const processedBooks = new Set<string>();
+    
     for (const item of items) {
       try {
+        // Create a unique key for this book+recommender combination to prevent duplicates
+        const uniqueKey = `${item.title.toLowerCase()}_${item.recommenderName.toLowerCase()}`;
+        
+        // Skip if we've already processed this book+recommender combination
+        if (processedBooks.has(uniqueKey)) {
+          console.log(`Skipping duplicate import: ${item.title} by ${item.recommenderName}`);
+          continue;
+        }
+        
+        // For MemStorage, we'll just count each successfully imported item
         await this.createCompleteRecommendation({
           title: item.title,
           author: item.author,
@@ -259,14 +272,20 @@ export class MemStorage implements IStorage {
           recommenderOrg: item.recommenderOrg,
           industry: undefined, // CSV doesn't have this field
           comment: item.comment,
-          recommendationDate: item.recommendationDate.split(" ")[0], // Extract year
-          recommendationMedium: item.recommendationDate.split(" ")[1], // Extract medium
+          recommendationDate: item.recommendationDate ? item.recommendationDate.split(" ")[0] : undefined, // Extract year
+          recommendationMedium: item.recommendationDate ? item.recommendationDate.split(" ").slice(1).join(" ") : undefined, // Extract medium
           reason: item.reason
         });
+        
+        // Mark as processed and increment success counter
+        processedBooks.add(uniqueKey);
+        successCount++;
       } catch (error) {
         console.error(`Error importing item: ${JSON.stringify(item)}`, error);
       }
     }
+    
+    return successCount;
   }
 }
 
@@ -612,9 +631,45 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Import from CSV
-  async importFromCSV(items: BookRecommendationCSV[]): Promise<void> {
+  async importFromCSV(items: BookRecommendationCSV[]): Promise<number> {
+    let successCount = 0;
+    const processedBooks = new Set<string>();
+    
     for (const item of items) {
       try {
+        // Create a unique key for this book+recommender combination to prevent duplicates
+        const uniqueKey = `${item.title.toLowerCase()}_${item.recommenderName.toLowerCase()}`;
+        
+        // Skip if we've already processed this book+recommender combination
+        if (processedBooks.has(uniqueKey)) {
+          console.log(`Skipping duplicate import: ${item.title} by ${item.recommenderName}`);
+          continue;
+        }
+        
+        // Check if this book already exists
+        const existingBook = await this.getBookByTitle(item.title);
+        
+        // If book exists, check if recommender exists
+        if (existingBook) {
+          const existingRecommender = await this.getRecommenderByName(item.recommenderName);
+          
+          // If both book and recommender exist, check if recommendation exists
+          if (existingRecommender) {
+            // Get all recommendations for this book
+            const bookRecommendations = await this.getCompleteRecommendationsByBookId(existingBook.id);
+            
+            // Check if a recommendation from this recommender already exists
+            const hasRecommendation = bookRecommendations.some(
+              rec => rec.recommenderId === existingRecommender.id
+            );
+            
+            if (hasRecommendation) {
+              console.log(`Skipping existing recommendation: ${item.title} by ${item.recommenderName}`);
+              continue;
+            }
+          }
+        }
+        
         await this.createCompleteRecommendation({
           title: item.title,
           author: item.author,
@@ -634,10 +689,16 @@ export class DatabaseStorage implements IStorage {
           sourceUrl: item.sourceUrl,
           reason: item.reason
         });
+        
+        // Mark as processed and increment success counter
+        processedBooks.add(uniqueKey);
+        successCount++;
       } catch (error) {
         console.error(`Error importing item: ${JSON.stringify(item)}`, error);
       }
     }
+    
+    return successCount;
   }
 }
 
