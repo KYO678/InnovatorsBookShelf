@@ -337,9 +337,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createRecommender(recommender: InsertRecommender): Promise<Recommender> {
+    // nullに変換して型の整合性を保つ
+    const processedRecommender = {
+      name: recommender.name,
+      organization: recommender.organization || null,
+      industry: recommender.industry || null
+    };
+    
     const [newRecommender] = await db
       .insert(recommenders)
-      .values(recommender)
+      .values(processedRecommender)
       .returning();
     return newRecommender;
   }
@@ -370,9 +377,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createRecommendation(recommendation: InsertRecommendation): Promise<Recommendation> {
+    // nullに変換して型の整合性を保つ
+    const processedRecommendation = {
+      bookId: recommendation.bookId,
+      recommenderId: recommendation.recommenderId,
+      comment: recommendation.comment || null,
+      recommendationDate: recommendation.recommendationDate || null,
+      recommendationMedium: recommendation.recommendationMedium || null,
+      source: recommendation.source || null,
+      sourceUrl: recommendation.sourceUrl || null,
+      reason: recommendation.reason || null
+    };
+    
     const [newRecommendation] = await db
       .insert(recommendations)
-      .values(recommendation)
+      .values(processedRecommendation)
       .returning();
     return newRecommendation;
   }
@@ -460,10 +479,10 @@ export class DatabaseStorage implements IStorage {
           .values({
             title: data.title,
             author: data.author,
-            category: data.category,
-            imageUrl: data.imageUrl,
-            publishYear: data.publishYear,
-            description: data.description
+            category: data.category || null,
+            imageUrl: data.imageUrl || null,
+            publishYear: data.publishYear || null,
+            description: data.description || null
           })
           .returning();
         book = newBook;
@@ -488,8 +507,8 @@ export class DatabaseStorage implements IStorage {
           .insert(recommenders)
           .values({
             name: data.recommenderName,
-            organization: data.recommenderOrg,
-            industry: data.industry
+            organization: data.recommenderOrg || null,
+            industry: data.industry || null
           })
           .returning();
         recommender = newRecommender;
@@ -501,12 +520,12 @@ export class DatabaseStorage implements IStorage {
         .values({
           bookId: book.id,
           recommenderId: recommender.id,
-          comment: data.comment,
-          recommendationDate: data.recommendationDate,
-          recommendationMedium: data.recommendationMedium,
-          source: data.source,
-          sourceUrl: data.sourceUrl,
-          reason: data.reason
+          comment: data.comment || null,
+          recommendationDate: data.recommendationDate || null,
+          recommendationMedium: data.recommendationMedium || null,
+          source: data.source || null,
+          sourceUrl: data.sourceUrl || null,
+          reason: data.reason || null
         })
         .returning();
 
