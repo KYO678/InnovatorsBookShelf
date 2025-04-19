@@ -137,6 +137,12 @@ const BookDetail = () => {
                   <div className="w-24 text-sm font-medium text-gray-600">著者:</div>
                   <div className="text-gray-800">{book.author}</div>
                 </div>
+                {book.publishYear && (
+                  <div className="flex items-center">
+                    <div className="w-24 text-sm font-medium text-gray-600">出版年:</div>
+                    <div className="text-gray-800">{book.publishYear}</div>
+                  </div>
+                )}
                 {book.category && (
                   <div className="flex items-center">
                     <div className="w-24 text-sm font-medium text-gray-600">カテゴリ:</div>
@@ -151,6 +157,13 @@ const BookDetail = () => {
                   <div className="w-24 text-sm font-medium text-gray-600">推薦者数:</div>
                   <div className="text-gray-800">{recommendations.length}名</div>
                 </div>
+                
+                {book.description && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="text-sm font-medium text-gray-600 mb-1">書籍の説明:</div>
+                    <div className="text-gray-800">{book.description}</div>
+                  </div>
+                )}
               </div>
             </div>
             
@@ -193,6 +206,26 @@ const BookDetail = () => {
                               </p>
                             </div>
                           )}
+                          
+                          {rec.source && (
+                            <div className="flex">
+                              <div className="text-sm font-medium text-gray-600 mr-2">出所情報:</div>
+                              <p className="text-gray-800">
+                                {rec.source}
+                                {rec.sourceUrl && (
+                                  <a 
+                                    href={rec.sourceUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="ml-2 text-accent hover:text-accent-dark underline"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <i className="ri-external-link-line"></i> リンク
+                                  </a>
+                                )}
+                              </p>
+                            </div>
+                          )}
                           {rec.reason && (
                             <div>
                               <div className="text-sm font-medium text-gray-600">推薦理由・背景:</div>
@@ -221,12 +254,22 @@ const BookDetail = () => {
                         className="bg-secondary-light rounded-lg p-3 text-center cursor-pointer hover:bg-secondary-dark transition-colors"
                         onClick={() => setLocation(`/books/${relatedBook.id}`)}
                       >
-                        <div className="w-full h-20 bg-primary-light mb-2 rounded relative overflow-hidden">
-                          <div className="absolute left-0 top-0 w-3 h-full bg-primary-dark rounded-l"></div>
-                          <div className="h-full flex items-center justify-center">
-                            <span className="text-white text-sm font-medium px-2">{relatedBook.title}</span>
+                        {relatedBook.imageUrl ? (
+                          <div className="w-full h-24 mb-2 rounded overflow-hidden">
+                            <img 
+                              src={relatedBook.imageUrl} 
+                              alt={`${relatedBook.title}の表紙`} 
+                              className="w-full h-full object-cover" 
+                            />
                           </div>
-                        </div>
+                        ) : (
+                          <div className="w-full h-20 bg-primary-light mb-2 rounded relative overflow-hidden">
+                            <div className="absolute left-0 top-0 w-3 h-full bg-primary-dark rounded-l"></div>
+                            <div className="h-full flex items-center justify-center">
+                              <span className="text-white text-sm font-medium px-2">{relatedBook.title}</span>
+                            </div>
+                          </div>
+                        )}
                         <div className="text-sm font-medium text-gray-800 truncate">{relatedBook.title}</div>
                         <div className="text-xs text-gray-600">{relatedBook.author}</div>
                       </div>

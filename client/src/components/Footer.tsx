@@ -23,23 +23,23 @@ const Footer = () => {
               </h3>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/">
-                    <a className="text-secondary-light hover:text-white transition-colors">ホーム</a>
+                  <Link href="/" className="text-secondary-light hover:text-white transition-colors">
+                    ホーム
                   </Link>
                 </li>
                 <li>
-                  <Link href="/books">
-                    <a className="text-secondary-light hover:text-white transition-colors">書籍一覧</a>
+                  <Link href="/books" className="text-secondary-light hover:text-white transition-colors">
+                    書籍一覧
                   </Link>
                 </li>
                 <li>
-                  <Link href="/recommenders">
-                    <a className="text-secondary-light hover:text-white transition-colors">推薦者一覧</a>
+                  <Link href="/recommenders" className="text-secondary-light hover:text-white transition-colors">
+                    推薦者一覧
                   </Link>
                 </li>
                 <li>
-                  <Link href="/about">
-                    <a className="text-secondary-light hover:text-white transition-colors">サイトについて</a>
+                  <Link href="/about" className="text-secondary-light hover:text-white transition-colors">
+                    サイトについて
                   </Link>
                 </li>
               </ul>
@@ -51,8 +51,8 @@ const Footer = () => {
               </h3>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/admin">
-                    <a className="text-secondary-light hover:text-white transition-colors">管理者ログイン</a>
+                  <Link href="/admin" className="text-secondary-light hover:text-white transition-colors">
+                    管理者ログイン
                   </Link>
                 </li>
                 <li>
@@ -67,8 +67,8 @@ const Footer = () => {
               </h3>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/about">
-                    <a className="text-secondary-light hover:text-white transition-colors">プロジェクトについて</a>
+                  <Link href="/about" className="text-secondary-light hover:text-white transition-colors">
+                    プロジェクトについて
                   </Link>
                 </li>
               </ul>

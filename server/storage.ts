@@ -289,7 +289,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createBook(book: InsertBook): Promise<Book> {
-    const [newBook] = await db.insert(books).values(book).returning();
+    // nullに変換して型の整合性を保つ
+    const processedBook = {
+      title: book.title,
+      author: book.author,
+      category: book.category || null,
+      imageUrl: book.imageUrl || null,
+      publishYear: book.publishYear || null,
+      description: book.description || null
+    };
+    
+    const [newBook] = await db.insert(books).values(processedBook).returning();
     return newBook;
   }
 
