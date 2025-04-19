@@ -1,9 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { combinedInsertSchema, CombinedInsert, Book, BookRecommendationCSV } from "@shared/schema";
+import { 
+  combinedInsertSchema, 
+  CombinedInsert, 
+  Book, 
+  BookRecommendationCSV, 
+  Recommender,
+  EditBookFormValues,
+  EditRecommenderFormValues
+} from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { importBooksFromCSV } from "@/lib/csv-parser";
 import { useToast } from "@/hooks/use-toast";
@@ -35,16 +43,41 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog";
 import AdminBookForm from "@/components/AdminBookForm";
+import EditBookForm from "@/components/EditBookForm";
+import EditRecommenderForm from "@/components/EditRecommenderForm";
 
 const Admin = () => {
   const { toast } = useToast();
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  
+  // State for edit dialogs
+  const [isEditBookDialogOpen, setIsEditBookDialogOpen] = useState(false);
+  const [isEditRecommenderDialogOpen, setIsEditRecommenderDialogOpen] = useState(false);
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [selectedRecommender, setSelectedRecommender] = useState<Recommender | null>(null);
+  
+  // Search state
+  const [searchBookQuery, setSearchBookQuery] = useState('');
+  const [searchRecommenderQuery, setSearchRecommenderQuery] = useState('');
 
-  // Fetch all books for the table
+  // Fetch all books and recommenders for the table
   const { data: books = [], isLoading: isLoadingBooks } = useQuery({
     queryKey: ['/api/books'],
+  });
+  
+  const { data: recommenders = [], isLoading: isLoadingRecommenders } = useQuery({
+    queryKey: ['/api/recommenders'],
   });
 
   // Add book mutation

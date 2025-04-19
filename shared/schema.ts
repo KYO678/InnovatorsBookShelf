@@ -137,6 +137,43 @@ export type CompleteRecommendation = Recommendation & {
 };
 
 // CSV data type for importing
+// CSV data type for importing
+export type BookRecommendationCSV = {
+  title: string;
+  author: string;
+  recommenderName: string;
+  recommenderOrg: string;
+  comment: string;
+  recommendationDate: string;
+  reason: string;
+  category?: string;
+  imageUrl?: string;
+  publishYear?: string;
+  description?: string;
+  source?: string;
+  sourceUrl?: string;
+};
+
+// スキーマの編集用
+export const editBookSchema = z.object({
+  title: z.string().min(1, { message: "タイトルは必須です" }),
+  author: z.string().min(1, { message: "著者名は必須です" }),
+  category: z.string().optional(),
+  publishYear: z.string().optional(),
+  description: z.string().optional(),
+  imageUrl: z.string().optional(),
+});
+
+export const editRecommenderSchema = z.object({
+  name: z.string().min(1, { message: "名前は必須です" }),
+  organization: z.string().optional(),
+  industry: z.string().optional(),
+  imageUrl: z.string().optional(),
+});
+
+export type EditBookFormValues = z.infer<typeof editBookSchema>;
+export type EditRecommenderFormValues = z.infer<typeof editRecommenderSchema>;
+
 export type BookRecommendationCSV = {
   title: string;
   author: string;
