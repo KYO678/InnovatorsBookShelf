@@ -450,10 +450,25 @@ export class DatabaseStorage implements IStorage {
           .values({
             title: data.title,
             author: data.author,
-            category: data.category
+            category: data.category,
+            imageUrl: data.imageUrl,
+            publishYear: data.publishYear,
+            description: data.description
           })
           .returning();
         book = newBook;
+      } else if (data.imageUrl && !book.imageUrl) {
+        // 画像が追加された場合、既存の本の情報を更新
+        const [updatedBook] = await tx
+          .update(books)
+          .set({ 
+            imageUrl: data.imageUrl,
+            publishYear: data.publishYear || book.publishYear,
+            description: data.description || book.description
+          })
+          .where(eq(books.id, book.id))
+          .returning();
+        book = updatedBook;
       }
 
       // Check if recommender already exists or create a new one
@@ -479,6 +494,8 @@ export class DatabaseStorage implements IStorage {
           comment: data.comment,
           recommendationDate: data.recommendationDate,
           recommendationMedium: data.recommendationMedium,
+          source: data.source,
+          sourceUrl: data.sourceUrl,
           reason: data.reason
         })
         .returning();
@@ -500,12 +517,19 @@ export class DatabaseStorage implements IStorage {
           title: item.title,
           author: item.author,
           category: item.category,
+          imageUrl: item.imageUrl,
+          publishYear: item.publishYear,
+          description: item.description,
           recommenderName: item.recommenderName,
           recommenderOrg: item.recommenderOrg,
-          industry: undefined, // CSV doesn't have this field
+          industry: undefined, // CSVに含まれていない場合は別途設定
           comment: item.comment,
-          recommendationDate: item.recommendationDate.split(" ")[0], // Extract year
-          recommendationMedium: item.recommendationDate.split(" ").slice(1).join(" "), // Extract medium
+          recommendationDate: item.recommendationDate ? 
+            item.recommendationDate.split(" ")[0] : undefined, // Extract year
+          recommendationMedium: item.recommendationDate ? 
+            item.recommendationDate.split(" ").slice(1).join(" ") : undefined, // Extract medium
+          source: item.source,
+          sourceUrl: item.sourceUrl,
           reason: item.reason
         });
       } catch (error) {

@@ -9,6 +9,9 @@ export const books = pgTable("books", {
   title: text("title").notNull(),
   author: text("author").notNull(),
   category: text("category"),
+  imageUrl: text("image_url"), // 書籍のサムネイル画像URL
+  publishYear: text("publish_year"), // 出版年
+  description: text("description"), // 書籍の説明
 });
 
 // Book relations
@@ -50,6 +53,8 @@ export const recommendations = pgTable("recommendations", {
   comment: text("comment"),
   recommendationDate: text("recommendation_date"),
   recommendationMedium: text("recommendation_medium"),
+  source: text("source"), // 推薦の出所情報（イベント、インタビュー、記事など）
+  sourceUrl: text("source_url"), // 出所のURL
   reason: text("reason"),
 });
 
@@ -70,6 +75,9 @@ export const insertBookSchema = createInsertSchema(books).pick({
   title: true,
   author: true,
   category: true,
+  imageUrl: true,
+  publishYear: true,
+  description: true,
 });
 
 export const insertRecommenderSchema = createInsertSchema(recommenders).pick({
@@ -84,6 +92,8 @@ export const insertRecommendationSchema = createInsertSchema(recommendations).pi
   comment: true,
   recommendationDate: true,
   recommendationMedium: true,
+  source: true,
+  sourceUrl: true,
   reason: true,
 });
 
@@ -92,12 +102,17 @@ export const combinedInsertSchema = z.object({
   title: z.string().min(1, { message: "書籍タイトルは必須です" }),
   author: z.string().min(1, { message: "著者名は必須です" }),
   category: z.string().optional(),
+  imageUrl: z.string().optional(),
+  publishYear: z.string().optional(),
+  description: z.string().optional(),
   recommenderName: z.string().min(1, { message: "推薦者名は必須です" }),
   recommenderOrg: z.string().optional(),
   industry: z.string().optional(),
   comment: z.string().optional(),
   recommendationDate: z.string().optional(),
   recommendationMedium: z.string().optional(),
+  source: z.string().optional(), // 推薦の出所情報
+  sourceUrl: z.string().optional(), // 出所のURL
   reason: z.string().optional(),
 });
 
@@ -129,4 +144,9 @@ export type BookRecommendationCSV = {
   recommendationDate: string;
   reason: string;
   category?: string;
+  imageUrl?: string;
+  publishYear?: string;
+  description?: string;
+  source?: string;
+  sourceUrl?: string;
 };
