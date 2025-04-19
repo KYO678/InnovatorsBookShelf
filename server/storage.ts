@@ -23,6 +23,7 @@ export interface IStorage {
   getBookByTitle(title: string): Promise<Book | undefined>;
   createBook(book: InsertBook): Promise<Book>;
   updateBook(id: number, bookData: Partial<InsertBook>): Promise<Book | undefined>;
+  deleteBook(id: number): Promise<boolean>;
   searchBooks(query: string): Promise<Book[]>;
   
   // Recommender operations
@@ -31,6 +32,7 @@ export interface IStorage {
   getRecommenderByName(name: string): Promise<Recommender | undefined>;
   createRecommender(recommender: InsertRecommender): Promise<Recommender>;
   updateRecommender(id: number, recommenderData: Partial<InsertRecommender>): Promise<Recommender | undefined>;
+  deleteRecommender(id: number): Promise<boolean>;
   searchRecommenders(query: string): Promise<Recommender[]>;
   
   // Recommendation operations
@@ -98,6 +100,44 @@ export class MemStorage implements IStorage {
         book.author.toLowerCase().includes(lowerQuery)
     );
   }
+  
+  async updateBook(id: number, bookData: Partial<InsertBook>): Promise<Book | undefined> {
+    const book = this.booksMap.get(id);
+    if (!book) return undefined;
+    
+    const updatedBook: Book = {
+      ...book,
+      ...bookData,
+      id
+    };
+    
+    this.booksMap.set(id, updatedBook);
+    return updatedBook;
+  }
+  
+  async deleteBook(id: number): Promise<boolean> {
+    // 本が存在するか確認
+    if (!this.booksMap.has(id)) {
+      return false;
+    }
+    
+    // その本に関連する推薦も削除
+    const relatedRecommendationIds: number[] = [];
+    this.recommendationsMap.forEach((rec, recId) => {
+      if (rec.bookId === id) {
+        relatedRecommendationIds.push(recId);
+      }
+    });
+    
+    // 関連推薦を削除
+    relatedRecommendationIds.forEach(recId => {
+      this.recommendationsMap.delete(recId);
+    });
+    
+    // 本を削除
+    this.booksMap.delete(id);
+    return true;
+  }
 
   // Recommender operations
   async getAllRecommenders(): Promise<Recommender[]> {
@@ -128,6 +168,44 @@ export class MemStorage implements IStorage {
         recommender.name.toLowerCase().includes(lowerQuery) ||
         (recommender.organization && recommender.organization.toLowerCase().includes(lowerQuery))
     );
+  }
+  
+  async updateRecommender(id: number, recommenderData: Partial<InsertRecommender>): Promise<Recommender | undefined> {
+    const recommender = this.recommendersMap.get(id);
+    if (!recommender) return undefined;
+    
+    const updatedRecommender: Recommender = {
+      ...recommender,
+      ...recommenderData,
+      id
+    };
+    
+    this.recommendersMap.set(id, updatedRecommender);
+    return updatedRecommender;
+  }
+  
+  async deleteRecommender(id: number): Promise<boolean> {
+    // 推薦者が存在するか確認
+    if (!this.recommendersMap.has(id)) {
+      return false;
+    }
+    
+    // その推薦者に関連する推薦も削除
+    const relatedRecommendationIds: number[] = [];
+    this.recommendationsMap.forEach((rec, recId) => {
+      if (rec.recommenderId === id) {
+        relatedRecommendationIds.push(recId);
+      }
+    });
+    
+    // 関連推薦を削除
+    relatedRecommendationIds.forEach(recId => {
+      this.recommendationsMap.delete(recId);
+    });
+    
+    // 推薦者を削除
+    this.recommendersMap.delete(id);
+    return true;
   }
 
   // Recommendation operations
@@ -359,6 +437,34 @@ export class DatabaseStorage implements IStorage {
           sql`${books.author} ILIKE ${`%${query}%`}`
         )
       );
+  }
+  
+  async deleteBook(id: number): Promise<boolean> {
+    // まず本が存在するか確認
+    const book = await this.getBookById(id);
+    if (!book) {
+      return false;
+    }
+    
+    try {
+      // トランザクションを開始
+      await db.transaction(async (tx) => {
+        // この本に関連する推薦を先に削除
+        await tx
+          .delete(recommendations)
+          .where(eq(recommendations.bookId, id));
+        
+        // 本を削除
+        await tx
+          .delete(books)
+          .where(eq(books.id, id));
+      });
+      
+      return true;
+    } catch (error) {
+      console.error(`Error deleting book with ID ${id}:`, error);
+      return false;
+    }
   }
 
   // Recommender operations

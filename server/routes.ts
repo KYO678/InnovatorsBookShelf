@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage as dataStorage } from "./storage";
 import { z } from "zod";
-import { combinedInsertSchema, BookRecommendationCSV } from "@shared/schema";
+import { combinedInsertSchema, BookRecommendationCSV, InsertRecommendation } from "@shared/schema";
 import { parse } from "csv-parse/sync";
 import fs from "fs-extra";
 import path from "path";
@@ -276,6 +276,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error updating recommender:', error);
       res.status(500).json({ message: 'Error updating recommender' });
+    }
+  });
+  
+  // Book delete endpoint
+  app.delete('/api/admin/books/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid book ID' });
+      }
+      
+      const success = await dataStorage.deleteBook(id);
+      if (!success) {
+        return res.status(404).json({ message: 'Book not found' });
+      }
+      
+      res.json({ success: true, message: 'Book deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting book:', error);
+      res.status(500).json({ message: 'Error deleting book' });
+    }
+  });
+  
+  // Recommender delete endpoint
+  app.delete('/api/admin/recommenders/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid recommender ID' });
+      }
+      
+      const success = await dataStorage.deleteRecommender(id);
+      if (!success) {
+        return res.status(404).json({ message: 'Recommender not found' });
+      }
+      
+      res.json({ success: true, message: 'Recommender deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting recommender:', error);
+      res.status(500).json({ message: 'Error deleting recommender' });
+    }
+  });
+  
+  // Create recommendation endpoint (link book and recommender)
+  app.post('/api/admin/recommendations', async (req: Request, res: Response) => {
+    try {
+      const data = req.body as InsertRecommendation;
+      
+      // データの検証
+      if (!data.bookId || !data.recommenderId) {
+        return res.status(400).json({ message: 'Book ID and recommender ID are required' });
+      }
+      
+      // 本と推薦者の存在確認
+      const book = await dataStorage.getBookById(data.bookId);
+      const recommender = await dataStorage.getRecommenderById(data.recommenderId);
+      
+      if (!book) {
+        return res.status(404).json({ message: 'Book not found' });
+      }
+      
+      if (!recommender) {
+        return res.status(404).json({ message: 'Recommender not found' });
+      }
+      
+      // 推薦情報を作成
+      const recommendation = await dataStorage.createRecommendation(data);
+      
+      // 完全な推薦情報を作成して返す
+      const completeRecommendation = {
+        ...recommendation,
+        book,
+        recommender
+      };
+      
+      res.status(201).json(completeRecommendation);
+    } catch (error) {
+      console.error('Error creating recommendation:', error);
+      res.status(500).json({ message: 'Error creating recommendation' });
     }
   });
 
