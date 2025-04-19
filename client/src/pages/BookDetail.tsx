@@ -8,26 +8,26 @@ import { Book, CompleteRecommendation } from "@shared/schema";
 const BookDetail = () => {
   const { id } = useParams();
   const [_, setLocation] = useLocation();
-  const bookId = parseInt(id);
+  const bookId = parseInt(id || "0");
 
   // Fetch book details
-  const { data: book, isLoading: isLoadingBook } = useQuery({
+  const { data: book, isLoading: isLoadingBook } = useQuery<Book>({
     queryKey: [`/api/books/${bookId}`],
-    enabled: !isNaN(bookId),
+    enabled: !isNaN(bookId) && bookId > 0,
   });
 
   // Fetch book recommendations
-  const { data: recommendations = [], isLoading: isLoadingRecommendations } = useQuery({
+  const { data: recommendations = [], isLoading: isLoadingRecommendations } = useQuery<CompleteRecommendation[]>({
     queryKey: [`/api/books/${bookId}/recommenders`],
-    enabled: !isNaN(bookId),
+    enabled: !isNaN(bookId) && bookId > 0,
   });
 
   // Find related books (books recommended by the same recommenders)
-  const { data: allBooks = [] } = useQuery({
+  const { data: allBooks = [] } = useQuery<Book[]>({
     queryKey: ["/api/books"],
   });
 
-  const relatedBooks = recommendations.length > 0
+  const relatedBooks = recommendations && recommendations.length > 0
     ? allBooks.filter((b: Book) => 
         b.id !== bookId && 
         recommendations.some((rec: CompleteRecommendation) => 

@@ -8,18 +8,18 @@ import BookSpine from "@/components/BookSpine";
 const RecommenderDetail = () => {
   const { id } = useParams();
   const [_, setLocation] = useLocation();
-  const recommenderId = parseInt(id);
+  const recommenderId = parseInt(id || "0");
 
   // Fetch recommender details
-  const { data: recommender, isLoading: isLoadingRecommender } = useQuery({
+  const { data: recommender, isLoading: isLoadingRecommender } = useQuery<Recommender>({
     queryKey: [`/api/recommenders/${recommenderId}`],
-    enabled: !isNaN(recommenderId),
+    enabled: !isNaN(recommenderId) && recommenderId > 0,
   });
 
   // Fetch recommender's books
-  const { data: recommendations = [], isLoading: isLoadingRecommendations } = useQuery({
+  const { data: recommendations = [], isLoading: isLoadingRecommendations } = useQuery<CompleteRecommendation[]>({
     queryKey: [`/api/recommenders/${recommenderId}/books`],
-    enabled: !isNaN(recommenderId),
+    enabled: !isNaN(recommenderId) && recommenderId > 0,
   });
 
   if (isNaN(recommenderId)) {
@@ -90,21 +90,21 @@ const RecommenderDetail = () => {
         <div className="w-full h-28 bg-primary-light bg-opacity-20 relative">
           <div className="absolute -bottom-10 left-6">
             <div className="w-20 h-20 rounded-full border-4 border-white shadow-md bg-primary-light text-white flex items-center justify-center">
-              <span className="text-3xl">{recommender.name.charAt(0)}</span>
+              <span className="text-3xl">{recommender?.name?.charAt(0) || '?'}</span>
             </div>
           </div>
         </div>
         
         <div className="pt-12 p-6">
           <h1 className="text-3xl font-serif font-bold text-gray-900 mb-1">
-            {recommender.name}
+            {recommender?.name || '不明な推薦者'}
           </h1>
           
-          {recommender.organization && (
+          {recommender?.organization && (
             <p className="text-xl text-gray-600 mb-4">{recommender.organization}</p>
           )}
           
-          {recommender.industry && (
+          {recommender?.industry && (
             <div className="mb-6">
               <span className="bg-secondary text-primary text-sm font-medium px-3 py-1 rounded-full">
                 {recommender.industry}
@@ -114,7 +114,7 @@ const RecommenderDetail = () => {
           
           <div className="flex items-center mb-6">
             <div className="bg-secondary text-primary text-sm font-medium px-3 py-1 rounded-full">
-              <i className="ri-book-mark-line mr-1"></i> 推薦書籍: {recommendations.length}冊
+              <i className="ri-book-mark-line mr-1"></i> 推薦書籍: {recommendations?.length || 0}冊
             </div>
           </div>
           
@@ -122,9 +122,9 @@ const RecommenderDetail = () => {
           
           <ScrollArea className="h-[500px] rounded-md border">
             <div className="p-4 space-y-6">
-              {recommendations.length > 0 ? (
+              {recommendations && recommendations.length > 0 ? (
                 recommendations.map((rec: CompleteRecommendation) => (
-                  <div key={rec.id} className="bg-paper rounded-lg p-4">
+                  <div key={`${rec.bookId}_${rec.recommenderId}_${rec.id}`} className="bg-paper rounded-lg p-4">
                     <div className="md:flex">
                       <div className="md:w-1/4 mb-4 md:mb-0">
                         <div 
