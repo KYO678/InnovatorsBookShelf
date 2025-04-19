@@ -89,9 +89,19 @@ const RecommenderDetail = () => {
       <div className="bg-white rounded-lg shadow-xl overflow-hidden">
         <div className="w-full h-28 bg-primary-light bg-opacity-20 relative">
           <div className="absolute -bottom-10 left-6">
-            <div className="w-20 h-20 rounded-full border-4 border-white shadow-md bg-primary-light text-white flex items-center justify-center">
-              <span className="text-3xl">{recommender?.name?.charAt(0) || '?'}</span>
-            </div>
+            {recommender.imageUrl ? (
+              <div className="w-20 h-20 rounded-full border-4 border-white shadow-md bg-white flex items-center justify-center overflow-hidden">
+                <img 
+                  src={recommender.imageUrl} 
+                  alt={recommender.name} 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-20 h-20 rounded-full border-4 border-white shadow-md bg-primary-light text-white flex items-center justify-center">
+                <span className="text-3xl">{recommender?.name?.charAt(0) || '?'}</span>
+              </div>
+            )}
           </div>
         </div>
         
