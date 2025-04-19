@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage as dataStorage } from "./storage";
 import { z } from "zod";
-import { combinedInsertSchema } from "@shared/schema";
+import { combinedInsertSchema, BookRecommendationCSV } from "@shared/schema";
 import { parse } from "csv-parse/sync";
 import fs from "fs-extra";
 import path from "path";
@@ -210,6 +210,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error creating book recommendation:', error);
       res.status(500).json({ message: 'Error creating book recommendation' });
+    }
+  });
+  
+  // CSV import endpoint
+  app.post('/api/admin/import-csv', async (req: Request, res: Response) => {
+    try {
+      const items = req.body as BookRecommendationCSV[];
+      
+      if (!Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ message: 'Invalid CSV data format or empty array' });
+      }
+      
+      // Use the importFromCSV method to process all items at once
+      await dataStorage.importFromCSV(items);
+      
+      res.status(201).json({ 
+        message: `Successfully imported ${items.length} book recommendations`,
+        count: items.length
+      });
+    } catch (error) {
+      console.error('Error importing from CSV:', error);
+      res.status(500).json({ message: 'Error importing from CSV' });
     }
   });
 

@@ -198,6 +198,29 @@ const Admin = () => {
   });
 
   // Import CSV books
+  const importCsvMutation = useMutation({
+    mutationFn: async (data: BookRecommendationCSV[]) => {
+      const response = await apiRequest('POST', '/api/admin/import-csv', data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/books'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/recommenders'] });
+      toast({
+        title: "インポートに成功しました",
+        description: `${data.count}冊の書籍をインポートしました。`,
+      });
+      setCsvFile(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "インポートエラー",
+        description: error.message || "CSVファイルのインポート中にエラーが発生しました。",
+        variant: "destructive",
+      });
+    }
+  });
+  
   const handleCsvImport = async () => {
     if (!csvFile) {
       toast({
@@ -211,28 +234,7 @@ const Admin = () => {
     setIsImporting(true);
     try {
       const books = await importBooksFromCSV(csvFile);
-      
-      // Submit each book one by one
-      for (const book of books) {
-        await addBookMutation.mutateAsync({
-          title: book.title,
-          author: book.author,
-          category: book.category,
-          recommenderName: book.recommenderName,
-          recommenderOrg: book.recommenderOrg,
-          industry: undefined,
-          comment: book.comment,
-          recommendationDate: book.recommendationDate.split(' ')[0], // Extract year
-          recommendationMedium: book.recommendationDate.split(' ').slice(1).join(' '), // Extract medium
-          reason: book.reason,
-        });
-      }
-      
-      toast({
-        title: "インポートに成功しました",
-        description: `${books.length}冊の書籍をインポートしました。`,
-      });
-      setCsvFile(null);
+      await importCsvMutation.mutateAsync(books);
     } catch (error: any) {
       toast({
         title: "インポートエラー",
