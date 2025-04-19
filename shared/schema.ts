@@ -1,6 +1,7 @@
 import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 // Books table
 export const books = pgTable("books", {
@@ -9,6 +10,11 @@ export const books = pgTable("books", {
   author: text("author").notNull(),
   category: text("category"),
 });
+
+// Book relations
+export const booksRelations = relations(books, ({ many }) => ({
+  recommendations: many(recommendations),
+}));
 
 // Book categories (to help with filtering)
 export type BookCategory = 
@@ -31,6 +37,11 @@ export const recommenders = pgTable("recommenders", {
   industry: text("industry"),
 });
 
+// Recommender relations
+export const recommendersRelations = relations(recommenders, ({ many }) => ({
+  recommendations: many(recommendations),
+}));
+
 // Recommendations table (many-to-many relationship)
 export const recommendations = pgTable("recommendations", {
   id: serial("id").primaryKey(),
@@ -41,6 +52,18 @@ export const recommendations = pgTable("recommendations", {
   recommendationMedium: text("recommendation_medium"),
   reason: text("reason"),
 });
+
+// Recommendation relations
+export const recommendationsRelations = relations(recommendations, ({ one }) => ({
+  book: one(books, {
+    fields: [recommendations.bookId],
+    references: [books.id],
+  }),
+  recommender: one(recommenders, {
+    fields: [recommendations.recommenderId],
+    references: [recommenders.id],
+  }),
+}));
 
 // Insert schemas
 export const insertBookSchema = createInsertSchema(books).pick({

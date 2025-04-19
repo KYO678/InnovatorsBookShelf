@@ -12,6 +12,8 @@ import {
   type CombinedInsert,
   type BookRecommendationCSV
 } from "@shared/schema";
+import { eq, sql, or } from "drizzle-orm";
+import { db } from "./db";
 
 // Storage interface
 export interface IStorage {
@@ -266,4 +268,253 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  // Book operations
+  async getAllBooks(): Promise<Book[]> {
+    const result = await db.select().from(books);
+    return result;
+  }
+
+  async getBookById(id: number): Promise<Book | undefined> {
+    const [book] = await db.select().from(books).where(eq(books.id, id));
+    return book;
+  }
+
+  async getBookByTitle(title: string): Promise<Book | undefined> {
+    const [book] = await db
+      .select()
+      .from(books)
+      .where(sql`LOWER(${books.title}) = LOWER(${title})`);
+    return book;
+  }
+
+  async createBook(book: InsertBook): Promise<Book> {
+    const [newBook] = await db.insert(books).values(book).returning();
+    return newBook;
+  }
+
+  async searchBooks(query: string): Promise<Book[]> {
+    return db
+      .select()
+      .from(books)
+      .where(
+        or(
+          sql`${books.title} ILIKE ${`%${query}%`}`,
+          sql`${books.author} ILIKE ${`%${query}%`}`
+        )
+      );
+  }
+
+  // Recommender operations
+  async getAllRecommenders(): Promise<Recommender[]> {
+    return db.select().from(recommenders);
+  }
+
+  async getRecommenderById(id: number): Promise<Recommender | undefined> {
+    const [recommender] = await db
+      .select()
+      .from(recommenders)
+      .where(eq(recommenders.id, id));
+    return recommender;
+  }
+
+  async getRecommenderByName(name: string): Promise<Recommender | undefined> {
+    const [recommender] = await db
+      .select()
+      .from(recommenders)
+      .where(sql`LOWER(${recommenders.name}) = LOWER(${name})`);
+    return recommender;
+  }
+
+  async createRecommender(recommender: InsertRecommender): Promise<Recommender> {
+    const [newRecommender] = await db
+      .insert(recommenders)
+      .values(recommender)
+      .returning();
+    return newRecommender;
+  }
+
+  async searchRecommenders(query: string): Promise<Recommender[]> {
+    return db
+      .select()
+      .from(recommenders)
+      .where(
+        or(
+          sql`${recommenders.name} ILIKE ${`%${query}%`}`,
+          sql`${recommenders.organization} ILIKE ${`%${query}%`}`
+        )
+      );
+  }
+
+  // Recommendation operations
+  async getAllRecommendations(): Promise<Recommendation[]> {
+    return db.select().from(recommendations);
+  }
+
+  async getRecommendationById(id: number): Promise<Recommendation | undefined> {
+    const [recommendation] = await db
+      .select()
+      .from(recommendations)
+      .where(eq(recommendations.id, id));
+    return recommendation;
+  }
+
+  async createRecommendation(recommendation: InsertRecommendation): Promise<Recommendation> {
+    const [newRecommendation] = await db
+      .insert(recommendations)
+      .values(recommendation)
+      .returning();
+    return newRecommendation;
+  }
+
+  // Combined operations
+  async getBooksByRecommenderId(recommenderId: number): Promise<Book[]> {
+    // Use JOIN to get books by recommender ID
+    const result = await db
+      .select({
+        book: books
+      })
+      .from(recommendations)
+      .innerJoin(books, eq(recommendations.bookId, books.id))
+      .where(eq(recommendations.recommenderId, recommenderId));
+    
+    return result.map(r => r.book);
+  }
+
+  async getRecommendersByBookId(bookId: number): Promise<Recommender[]> {
+    // Use JOIN to get recommenders by book ID
+    const result = await db
+      .select({
+        recommender: recommenders
+      })
+      .from(recommendations)
+      .innerJoin(recommenders, eq(recommendations.recommenderId, recommenders.id))
+      .where(eq(recommendations.bookId, bookId));
+    
+    return result.map(r => r.recommender);
+  }
+
+  async getCompleteRecommendationsByBookId(bookId: number): Promise<CompleteRecommendation[]> {
+    // Use multiple JOINs to get complete recommendations
+    const result = await db
+      .select({
+        id: recommendations.id,
+        bookId: recommendations.bookId,
+        recommenderId: recommendations.recommenderId,
+        comment: recommendations.comment,
+        recommendationDate: recommendations.recommendationDate,
+        recommendationMedium: recommendations.recommendationMedium,
+        reason: recommendations.reason,
+        book: books,
+        recommender: recommenders
+      })
+      .from(recommendations)
+      .innerJoin(books, eq(recommendations.bookId, books.id))
+      .innerJoin(recommenders, eq(recommendations.recommenderId, recommenders.id))
+      .where(eq(recommendations.bookId, bookId));
+    
+    return result as CompleteRecommendation[];
+  }
+
+  async getCompleteRecommendationsByRecommenderId(recommenderId: number): Promise<CompleteRecommendation[]> {
+    // Use multiple JOINs to get complete recommendations
+    const result = await db
+      .select({
+        id: recommendations.id,
+        bookId: recommendations.bookId,
+        recommenderId: recommendations.recommenderId,
+        comment: recommendations.comment,
+        recommendationDate: recommendations.recommendationDate,
+        recommendationMedium: recommendations.recommendationMedium,
+        reason: recommendations.reason,
+        book: books,
+        recommender: recommenders
+      })
+      .from(recommendations)
+      .innerJoin(books, eq(recommendations.bookId, books.id))
+      .innerJoin(recommenders, eq(recommendations.recommenderId, recommenders.id))
+      .where(eq(recommendations.recommenderId, recommenderId));
+    
+    return result as CompleteRecommendation[];
+  }
+
+  // Create a complete book recommendation in one step
+  async createCompleteRecommendation(data: CombinedInsert): Promise<CompleteRecommendation> {
+    // Use a transaction to ensure atomicity
+    return await db.transaction(async (tx) => {
+      // Check if book already exists or create a new one
+      let book = await this.getBookByTitle(data.title);
+      if (!book) {
+        const [newBook] = await tx
+          .insert(books)
+          .values({
+            title: data.title,
+            author: data.author,
+            category: data.category
+          })
+          .returning();
+        book = newBook;
+      }
+
+      // Check if recommender already exists or create a new one
+      let recommender = await this.getRecommenderByName(data.recommenderName);
+      if (!recommender) {
+        const [newRecommender] = await tx
+          .insert(recommenders)
+          .values({
+            name: data.recommenderName,
+            organization: data.recommenderOrg,
+            industry: data.industry
+          })
+          .returning();
+        recommender = newRecommender;
+      }
+
+      // Create the recommendation
+      const [recommendation] = await tx
+        .insert(recommendations)
+        .values({
+          bookId: book.id,
+          recommenderId: recommender.id,
+          comment: data.comment,
+          recommendationDate: data.recommendationDate,
+          recommendationMedium: data.recommendationMedium,
+          reason: data.reason
+        })
+        .returning();
+
+      // Return complete recommendation
+      return {
+        ...recommendation,
+        book,
+        recommender
+      };
+    });
+  }
+
+  // Import from CSV
+  async importFromCSV(items: BookRecommendationCSV[]): Promise<void> {
+    for (const item of items) {
+      try {
+        await this.createCompleteRecommendation({
+          title: item.title,
+          author: item.author,
+          category: item.category,
+          recommenderName: item.recommenderName,
+          recommenderOrg: item.recommenderOrg,
+          industry: undefined, // CSV doesn't have this field
+          comment: item.comment,
+          recommendationDate: item.recommendationDate.split(" ")[0], // Extract year
+          recommendationMedium: item.recommendationDate.split(" ").slice(1).join(" "), // Extract medium
+          reason: item.reason
+        });
+      } catch (error) {
+        console.error(`Error importing item: ${JSON.stringify(item)}`, error);
+      }
+    }
+  }
+}
+
+// Replace MemStorage with DatabaseStorage
+// export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
