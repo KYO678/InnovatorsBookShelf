@@ -64,15 +64,17 @@ const HeroSection = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="md:flex md:items-center md:justify-between">
           <div className="md:w-1/2 md:pr-8">
-            <h2 className="text-3xl md:text-4xl font-serif font-bold text-white leading-tight">
-              著名人が<span className="text-secondary">推薦する</span>書籍を<br />
-              <span className="text-secondary">見つける</span>ことができる<br />
-              特別なコレクション
-            </h2>
-            <p className="mt-4 text-secondary-light md:text-lg">
-              ビジネスリーダーや影響力のある人々が推薦する本をまとめたデータベースです。
-              書籍から推薦者、推薦者から書籍へと、双方向に探索してみましょう。
-            </p>
+            <div className="bg-primary-dark bg-opacity-75 p-4 rounded-lg shadow-lg inline-block">
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-white leading-tight">
+                著名人が<span className="text-secondary">推薦する</span>書籍を<br />
+                <span className="text-secondary">見つける</span>ことができる<br />
+                特別なコレクション
+              </h2>
+              <p className="mt-4 text-white md:text-lg">
+                ビジネスリーダーや影響力のある人々が推薦する本をまとめたデータベースです。
+                書籍から推薦者、推薦者から書籍へと、双方向に探索してみましょう。
+              </p>
+            </div>
 
             <div className="mt-8 relative">
               <SearchBar

@@ -24,33 +24,33 @@ const Header = () => {
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center space-x-2">
             <Link href="/">
-              <a className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 cursor-pointer">
                 <i className="ri-book-open-line text-secondary-light text-3xl"></i>
                 <h1 className="text-secondary-light font-serif text-2xl font-bold">Legend's Book Shelf</h1>
-              </a>
+              </div>
             </Link>
           </div>
           
           <div className="hidden md:flex items-center space-x-6">
             <Link href="/">
-              <a className={`text-secondary-light hover:text-white transition-colors ${isActive("/") ? "font-medium" : ""}`}>
+              <div className={`text-secondary-light hover:text-white transition-colors ${isActive("/") ? "font-medium" : ""} cursor-pointer`}>
                 ホーム
-              </a>
+              </div>
             </Link>
             <Link href="/books">
-              <a className={`text-secondary-light hover:text-white transition-colors ${isActive("/books") ? "font-medium" : ""}`}>
+              <div className={`text-secondary-light hover:text-white transition-colors ${isActive("/books") ? "font-medium" : ""} cursor-pointer`}>
                 書籍一覧
-              </a>
+              </div>
             </Link>
             <Link href="/recommenders">
-              <a className={`text-secondary-light hover:text-white transition-colors ${isActive("/recommenders") ? "font-medium" : ""}`}>
+              <div className={`text-secondary-light hover:text-white transition-colors ${isActive("/recommenders") ? "font-medium" : ""} cursor-pointer`}>
                 推薦者一覧
-              </a>
+              </div>
             </Link>
             <Link href="/about">
-              <a className={`text-secondary-light hover:text-white transition-colors ${isActive("/about") ? "font-medium" : ""}`}>
+              <div className={`text-secondary-light hover:text-white transition-colors ${isActive("/about") ? "font-medium" : ""} cursor-pointer`}>
                 サイトについて
-              </a>
+              </div>
             </Link>
           </div>
           
@@ -68,29 +68,29 @@ const Header = () => {
                   </SheetHeader>
                   <div className="flex flex-col space-y-4">
                     <Link href="/">
-                      <a className="block px-3 py-2 text-secondary-light hover:bg-primary-light rounded-md" onClick={() => setIsMobileMenuOpen(false)}>
+                      <div className="block px-3 py-2 text-secondary-light hover:bg-primary-light rounded-md cursor-pointer" onClick={() => setIsMobileMenuOpen(false)}>
                         ホーム
-                      </a>
+                      </div>
                     </Link>
                     <Link href="/books">
-                      <a className="block px-3 py-2 text-secondary-light hover:bg-primary-light rounded-md" onClick={() => setIsMobileMenuOpen(false)}>
+                      <div className="block px-3 py-2 text-secondary-light hover:bg-primary-light rounded-md cursor-pointer" onClick={() => setIsMobileMenuOpen(false)}>
                         書籍一覧
-                      </a>
+                      </div>
                     </Link>
                     <Link href="/recommenders">
-                      <a className="block px-3 py-2 text-secondary-light hover:bg-primary-light rounded-md" onClick={() => setIsMobileMenuOpen(false)}>
+                      <div className="block px-3 py-2 text-secondary-light hover:bg-primary-light rounded-md cursor-pointer" onClick={() => setIsMobileMenuOpen(false)}>
                         推薦者一覧
-                      </a>
+                      </div>
                     </Link>
                     <Link href="/about">
-                      <a className="block px-3 py-2 text-secondary-light hover:bg-primary-light rounded-md" onClick={() => setIsMobileMenuOpen(false)}>
+                      <div className="block px-3 py-2 text-secondary-light hover:bg-primary-light rounded-md cursor-pointer" onClick={() => setIsMobileMenuOpen(false)}>
                         サイトについて
-                      </a>
+                      </div>
                     </Link>
                     <Link href="/admin">
-                      <a className="block px-3 py-2 text-white bg-accent rounded-md" onClick={() => setIsMobileMenuOpen(false)}>
+                      <div className="block px-3 py-2 text-white bg-accent rounded-md cursor-pointer" onClick={() => setIsMobileMenuOpen(false)}>
                         管理者ログイン
-                      </a>
+                      </div>
                     </Link>
                   </div>
                 </SheetContent>
@@ -98,9 +98,9 @@ const Header = () => {
             </div>
             
             <Link href="/admin">
-              <a className="hidden md:block bg-accent hover:bg-accent-dark text-white font-medium py-2 px-4 rounded-lg transition-colors">
+              <div className="hidden md:block bg-accent hover:bg-accent-dark text-white font-medium py-2 px-4 rounded-lg transition-colors cursor-pointer">
                 <i className="ri-user-settings-line mr-1"></i> 管理者ログイン
-              </a>
+              </div>
             </Link>
           </div>
         </div>
