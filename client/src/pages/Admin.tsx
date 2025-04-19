@@ -204,11 +204,22 @@ const Admin = () => {
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/books'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/recommenders'] });
+      // インポート結果から適切なメッセージを表示
+      const importCount = data.count || 0;
+      const totalCount = data.total || data.count || 0;
+      const skippedCount = data.skipped || 0;
+      
+      let description = `${importCount}冊の書籍をインポートしました。`;
+      if (skippedCount > 0) {
+        description += ` ${skippedCount}冊は重複のためスキップされました。`;
+      }
+      
+      // キャッシュを徹底的に無効化して最新データを取得する
+      queryClient.invalidateQueries();
+      
       toast({
         title: "インポートに成功しました",
-        description: `${data.count}冊の書籍をインポートしました。`,
+        description: description,
       });
       setCsvFile(null);
     },
