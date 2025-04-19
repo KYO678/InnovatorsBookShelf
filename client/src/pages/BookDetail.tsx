@@ -115,9 +115,17 @@ const BookDetail = () => {
           <div className="md:flex">
             <div className="md:w-1/3 mb-6 md:mb-0 md:pr-6">
               <div className="bg-secondary-light p-6 rounded-lg shadow-inner flex items-center justify-center">
-                <div className="relative w-32 h-48">
-                  <BookSpine title={book.title} />
-                </div>
+                {book.imageUrl ? (
+                  <img 
+                    src={book.imageUrl} 
+                    alt={`${book.title}の表紙`} 
+                    className="w-32 h-auto max-h-48 object-contain shadow-md rounded" 
+                  />
+                ) : (
+                  <div className="relative w-32 h-48">
+                    <BookSpine title={book.title} />
+                  </div>
+                )}
               </div>
               
               <div className="mt-4 space-y-2">

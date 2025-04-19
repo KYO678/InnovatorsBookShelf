@@ -93,6 +93,52 @@ const AdminBookForm = ({ form, onSubmit, isSubmitting }: AdminBookFormProps) => 
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="imageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>書籍サムネイル画像URL</FormLabel>
+                  <FormControl>
+                    <Input placeholder="画像のURLを入力" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="publishYear"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>出版年</FormLabel>
+                  <FormControl>
+                    <Input placeholder="例：2018年" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>書籍の説明</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="書籍の内容や概要を入力"
+                      rows={3}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
 
           {/* Recommender Information */}
@@ -188,6 +234,36 @@ const AdminBookForm = ({ form, onSubmit, isSubmitting }: AdminBookFormProps) => 
                   <FormLabel>推薦媒体</FormLabel>
                   <FormControl>
                     <Input placeholder="例：インタビュー、ブログ" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="source"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>出所情報</FormLabel>
+                  <FormControl>
+                    <Input placeholder="例：年次株主総会、講演会" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="sourceUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>出所URL</FormLabel>
+                  <FormControl>
+                    <Input placeholder="出所情報のURLを入力" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

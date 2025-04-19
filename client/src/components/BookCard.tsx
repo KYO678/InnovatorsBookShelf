@@ -22,13 +22,34 @@ const BookCard = ({ book }: BookCardProps) => {
     <div className="book-card relative bg-white rounded-lg overflow-hidden">
       <div className="book-spine" aria-hidden="true"></div>
       <div className="p-5 pl-8">
-        <h3 
-          className="font-serif text-xl font-bold text-gray-800 mb-2 hover:text-accent cursor-pointer"
-          onClick={handleCardClick}
-        >
-          {book.title}
-        </h3>
-        <p className="text-gray-600 mb-3">{book.author}</p>
+        <div className="flex items-start mb-2">
+          {book.imageUrl && (
+            <div className="mr-3 flex-shrink-0">
+              <img 
+                src={book.imageUrl} 
+                alt={`${book.title}の表紙`} 
+                className="w-16 h-20 object-cover rounded shadow-sm" 
+              />
+            </div>
+          )}
+          <div className="flex-grow">
+            <h3 
+              className="font-serif text-xl font-bold text-gray-800 mb-1 hover:text-accent cursor-pointer"
+              onClick={handleCardClick}
+            >
+              {book.title}
+            </h3>
+            <p className="text-gray-600 mb-1">{book.author}</p>
+            {book.publishYear && (
+              <p className="text-gray-500 text-sm">{book.publishYear}</p>
+            )}
+          </div>
+        </div>
+        <div>
+          {book.description && (
+            <p className="text-gray-600 text-sm mb-3 line-clamp-2">{book.description}</p>
+          )}
+        </div>
         
         <div className="flex items-center mb-3">
           {book.category && (
