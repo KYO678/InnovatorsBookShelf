@@ -509,7 +509,7 @@ const Admin = () => {
 
       {/* 書籍編集ダイアログ */}
       <Dialog open={isEditBookDialogOpen} onOpenChange={setIsEditBookDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>書籍情報の編集</DialogTitle>
             <DialogDescription>
@@ -529,7 +529,7 @@ const Admin = () => {
 
       {/* 推薦者編集ダイアログ */}
       <Dialog open={isEditRecommenderDialogOpen} onOpenChange={setIsEditRecommenderDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>推薦者情報の編集</DialogTitle>
             <DialogDescription>
