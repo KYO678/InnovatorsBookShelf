@@ -137,7 +137,6 @@ export type CompleteRecommendation = Recommendation & {
 };
 
 // CSV data type for importing
-// CSV data type for importing
 export type BookRecommendationCSV = {
   title: string;
   author: string;
@@ -173,19 +172,3 @@ export const editRecommenderSchema = z.object({
 
 export type EditBookFormValues = z.infer<typeof editBookSchema>;
 export type EditRecommenderFormValues = z.infer<typeof editRecommenderSchema>;
-
-export type BookRecommendationCSV = {
-  title: string;
-  author: string;
-  recommenderName: string;
-  recommenderOrg: string;
-  comment: string;
-  recommendationDate: string;
-  reason: string;
-  category?: string;
-  imageUrl?: string;
-  publishYear?: string;
-  description?: string;
-  source?: string;
-  sourceUrl?: string;
-};
