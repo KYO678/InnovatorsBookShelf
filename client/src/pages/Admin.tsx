@@ -66,6 +66,7 @@ const Admin = () => {
   // State for edit dialogs
   const [isEditBookDialogOpen, setIsEditBookDialogOpen] = useState(false);
   const [isEditRecommenderDialogOpen, setIsEditRecommenderDialogOpen] = useState(false);
+  const [isCreateRecommendationDialogOpen, setIsCreateRecommendationDialogOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [selectedRecommender, setSelectedRecommender] = useState<Recommender | null>(null);
   
@@ -173,6 +174,85 @@ const Admin = () => {
     if (selectedRecommender) {
       updateRecommenderMutation.mutate({ ...data, id: selectedRecommender.id });
     }
+  };
+  
+  // Book delete mutation
+  const deleteBookMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest('DELETE', `/api/admin/books/${id}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/books'] });
+      toast({
+        title: "書籍の削除に成功しました",
+        description: "書籍および関連する推薦情報が削除されました。",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "エラーが発生しました",
+        description: error.message || "書籍の削除中にエラーが発生しました。",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Recommender delete mutation
+  const deleteRecommenderMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest('DELETE', `/api/admin/recommenders/${id}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/recommenders'] });
+      toast({
+        title: "推薦者の削除に成功しました",
+        description: "推薦者および関連する推薦情報が削除されました。",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "エラーが発生しました",
+        description: error.message || "推薦者の削除中にエラーが発生しました。",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Create recommendation mutation
+  const createRecommendationMutation = useMutation({
+    mutationFn: async (data: { bookId: string; recommenderId: string; comment?: string; reason?: string }) => {
+      const payload = {
+        bookId: parseInt(data.bookId),
+        recommenderId: parseInt(data.recommenderId),
+        comment: data.comment || null,
+        reason: data.reason || null
+      };
+      const response = await apiRequest('POST', '/api/admin/recommendations', payload);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/books'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/recommenders'] });
+      setIsCreateRecommendationDialogOpen(false);
+      toast({
+        title: "推薦の作成に成功しました",
+        description: "書籍と推薦者の紐づけが完了しました。",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "エラーが発生しました",
+        description: error.message || "推薦の作成中にエラーが発生しました。",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Handler for creating a recommendation
+  const handleCreateRecommendation = (data: any) => {
+    createRecommendationMutation.mutate(data);
   };
 
   // Add book mutation
@@ -286,14 +366,23 @@ const Admin = () => {
         管理者ページ
       </h1>
       
-      <Tabs defaultValue="add-book">
-        <TabsList className="mb-6">
-          <TabsTrigger value="add-book">書籍の追加</TabsTrigger>
-          <TabsTrigger value="import-csv">CSVインポート</TabsTrigger>
-          <TabsTrigger value="manage-books">書籍の管理</TabsTrigger>
-          <TabsTrigger value="manage-recommenders">推薦者の管理</TabsTrigger>
-        </TabsList>
+      <div className="flex justify-between items-center mb-6">
+        <div className="w-auto">
+          <TabsList className="mb-0">
+            <TabsTrigger value="add-book">書籍の追加</TabsTrigger>
+            <TabsTrigger value="import-csv">CSVインポート</TabsTrigger>
+            <TabsTrigger value="manage-books">書籍の管理</TabsTrigger>
+            <TabsTrigger value="manage-recommenders">推薦者の管理</TabsTrigger>
+          </TabsList>
+        </div>
         
+        <Button onClick={() => setIsCreateRecommendationDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-1" />
+          書籍と推薦者を紐づける
+        </Button>
+      </div>
+
+      <Tabs defaultValue="add-book">
         <TabsContent value="add-book">
           <Card>
             <CardHeader>
@@ -418,13 +507,28 @@ const Admin = () => {
                           <TableCell>{book.author}</TableCell>
                           <TableCell>{book.category || '-'}</TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openEditBookDialog(book)}
-                            >
-                              編集
-                            </Button>
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openEditBookDialog(book)}
+                              >
+                                <Edit className="h-4 w-4 mr-1" />
+                                編集
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => {
+                                  if (confirm(`"${book.title}"を削除してもよろしいですか？関連する推薦情報もすべて削除されます。`)) {
+                                    deleteBookMutation.mutate(book.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                削除
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -499,13 +603,28 @@ const Admin = () => {
                           <TableCell>{recommender.organization || '-'}</TableCell>
                           <TableCell>{recommender.industry || '-'}</TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openEditRecommenderDialog(recommender)}
-                            >
-                              編集
-                            </Button>
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openEditRecommenderDialog(recommender)}
+                              >
+                                <Edit className="h-4 w-4 mr-1" />
+                                編集
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => {
+                                  if (confirm(`"${recommender.name}"を削除してもよろしいですか？関連する推薦情報もすべて削除されます。`)) {
+                                    deleteRecommenderMutation.mutate(recommender.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                削除
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -559,6 +678,25 @@ const Admin = () => {
               isSubmitting={updateRecommenderMutation.isPending} 
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* 推薦作成ダイアログ */}
+      <Dialog open={isCreateRecommendationDialogOpen} onOpenChange={setIsCreateRecommendationDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>書籍と推薦者の紐づけ</DialogTitle>
+            <DialogDescription>
+              既存の書籍と推薦者を関連付けて新しい推薦を作成します。
+            </DialogDescription>
+          </DialogHeader>
+          
+          <CreateRecommendationForm 
+            books={books}
+            recommenders={recommenders}
+            onSubmit={handleCreateRecommendation}
+            isSubmitting={createRecommendationMutation.isPending}
+          />
         </DialogContent>
       </Dialog>
     </main>
