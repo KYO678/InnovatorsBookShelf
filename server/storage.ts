@@ -538,6 +538,34 @@ export class DatabaseStorage implements IStorage {
         )
       );
   }
+  
+  async deleteRecommender(id: number): Promise<boolean> {
+    // まず推薦者が存在するか確認
+    const recommender = await this.getRecommenderById(id);
+    if (!recommender) {
+      return false;
+    }
+    
+    try {
+      // トランザクションを開始
+      await db.transaction(async (tx) => {
+        // この推薦者に関連する推薦を先に削除
+        await tx
+          .delete(recommendations)
+          .where(eq(recommendations.recommenderId, id));
+        
+        // 推薦者を削除
+        await tx
+          .delete(recommenders)
+          .where(eq(recommenders.id, id));
+      });
+      
+      return true;
+    } catch (error) {
+      console.error(`Error deleting recommender with ID ${id}:`, error);
+      return false;
+    }
+  }
 
   // Recommendation operations
   async getAllRecommendations(): Promise<Recommendation[]> {
