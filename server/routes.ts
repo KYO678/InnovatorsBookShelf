@@ -1,11 +1,12 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage as dataStorage } from "./storage";
 import { z } from "zod";
 import { combinedInsertSchema } from "@shared/schema";
 import { parse } from "csv-parse/sync";
-import fs from "fs";
+import fs from "fs-extra";
 import path from "path";
+import multer from "multer";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Load initial data from CSV
@@ -58,7 +59,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
     });
     
-    await storage.importFromCSV(processedRecords);
+    await dataStorage.importFromCSV(processedRecords);
     console.log('Initial data loaded from CSV');
   } catch (error) {
     console.error('Error loading initial data from CSV:', error);
@@ -67,7 +68,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Books API
   app.get('/api/books', async (req: Request, res: Response) => {
     try {
-      const books = await storage.getAllBooks();
+      const books = await dataStorage.getAllBooks();
       res.json(books);
     } catch (error) {
       console.error('Error fetching books:', error);
@@ -79,9 +80,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const query = req.query.q as string;
       if (!query) {
-        return res.json(await storage.getAllBooks());
+        return res.json(await dataStorage.getAllBooks());
       }
-      const books = await storage.searchBooks(query);
+      const books = await dataStorage.searchBooks(query);
       res.json(books);
     } catch (error) {
       console.error('Error searching books:', error);
@@ -96,7 +97,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid book ID' });
       }
       
-      const book = await storage.getBookById(id);
+      const book = await dataStorage.getBookById(id);
       if (!book) {
         return res.status(404).json({ message: 'Book not found' });
       }
@@ -115,12 +116,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid book ID' });
       }
       
-      const book = await storage.getBookById(id);
+      const book = await dataStorage.getBookById(id);
       if (!book) {
         return res.status(404).json({ message: 'Book not found' });
       }
       
-      const recommendations = await storage.getCompleteRecommendationsByBookId(id);
+      const recommendations = await dataStorage.getCompleteRecommendationsByBookId(id);
       res.json(recommendations);
     } catch (error) {
       console.error('Error fetching book recommenders:', error);
@@ -131,7 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Recommenders API
   app.get('/api/recommenders', async (req: Request, res: Response) => {
     try {
-      const recommenders = await storage.getAllRecommenders();
+      const recommenders = await dataStorage.getAllRecommenders();
       res.json(recommenders);
     } catch (error) {
       console.error('Error fetching recommenders:', error);
@@ -143,9 +144,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const query = req.query.q as string;
       if (!query) {
-        return res.json(await storage.getAllRecommenders());
+        return res.json(await dataStorage.getAllRecommenders());
       }
-      const recommenders = await storage.searchRecommenders(query);
+      const recommenders = await dataStorage.searchRecommenders(query);
       res.json(recommenders);
     } catch (error) {
       console.error('Error searching recommenders:', error);
@@ -160,7 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid recommender ID' });
       }
       
-      const recommender = await storage.getRecommenderById(id);
+      const recommender = await dataStorage.getRecommenderById(id);
       if (!recommender) {
         return res.status(404).json({ message: 'Recommender not found' });
       }
@@ -179,12 +180,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid recommender ID' });
       }
       
-      const recommender = await storage.getRecommenderById(id);
+      const recommender = await dataStorage.getRecommenderById(id);
       if (!recommender) {
         return res.status(404).json({ message: 'Recommender not found' });
       }
       
-      const recommendations = await storage.getCompleteRecommendationsByRecommenderId(id);
+      const recommendations = await dataStorage.getCompleteRecommendationsByRecommenderId(id);
       res.json(recommendations);
     } catch (error) {
       console.error('Error fetching recommender books:', error);
@@ -204,11 +205,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const completeRecommendation = await storage.createCompleteRecommendation(result.data);
+      const completeRecommendation = await dataStorage.createCompleteRecommendation(result.data);
       res.status(201).json(completeRecommendation);
     } catch (error) {
       console.error('Error creating book recommendation:', error);
       res.status(500).json({ message: 'Error creating book recommendation' });
+    }
+  });
+
+  // Book update endpoint
+  app.put('/api/admin/books/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid book ID' });
+      }
+      
+      const book = await dataStorage.updateBook(id, req.body);
+      if (!book) {
+        return res.status(404).json({ message: 'Book not found' });
+      }
+      
+      res.json(book);
+    } catch (error) {
+      console.error('Error updating book:', error);
+      res.status(500).json({ message: 'Error updating book' });
+    }
+  });
+
+  // Recommender update endpoint
+  app.put('/api/admin/recommenders/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid recommender ID' });
+      }
+      
+      const recommender = await dataStorage.updateRecommender(id, req.body);
+      if (!recommender) {
+        return res.status(404).json({ message: 'Recommender not found' });
+      }
+      
+      res.json(recommender);
+    } catch (error) {
+      console.error('Error updating recommender:', error);
+      res.status(500).json({ message: 'Error updating recommender' });
+    }
+  });
+
+  // Setup multer for image uploads
+  const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+  fs.ensureDirSync(uploadsDir); // Make sure the uploads directory exists
+
+  const multerStorage = multer.diskStorage({
+    destination: (_req, _file, cb) => {
+      cb(null, uploadsDir);
+    },
+    filename: (_req, file, cb) => {
+      // Generate unique filename with timestamp
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const ext = path.extname(file.originalname);
+      cb(null, uniqueSuffix + ext);
+    }
+  });
+
+  const upload = multer({ 
+    storage: multerStorage,
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+    fileFilter: (_req, file, cb) => {
+      // Accept only image files
+      if (!file.mimetype.startsWith('image/')) {
+        return cb(new Error('Only image files are allowed'));
+      }
+      cb(null, true);
+    }
+  });
+
+  // Image upload endpoint
+  app.post('/api/admin/upload', upload.single('image'), async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No image file uploaded' });
+      }
+
+      const type = req.body.type as 'book' | 'recommender';
+      const entityId = req.body.entityId ? parseInt(req.body.entityId) : undefined;
+      
+      // Generate relative URL for the image
+      const imageUrl = `/uploads/${req.file.filename}`;
+      
+      // Update entity with new image URL if ID is provided
+      if (entityId && !isNaN(entityId)) {
+        if (type === 'book') {
+          await dataStorage.updateBook(entityId, { imageUrl });
+        } else if (type === 'recommender') {
+          await dataStorage.updateRecommender(entityId, { imageUrl });
+        }
+      }
+      
+      res.json({ 
+        imageUrl,
+        message: 'Image uploaded successfully'
+      });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      res.status(500).json({ message: 'Error uploading image' });
     }
   });
 

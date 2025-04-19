@@ -38,6 +38,7 @@ export const recommenders = pgTable("recommenders", {
   name: text("name").notNull(),
   organization: text("organization"),
   industry: text("industry"),
+  imageUrl: text("image_url"), // 推薦者のプロフィール画像URL
 });
 
 // Recommender relations
@@ -84,6 +85,7 @@ export const insertRecommenderSchema = createInsertSchema(recommenders).pick({
   name: true,
   organization: true,
   industry: true,
+  imageUrl: true,
 });
 
 export const insertRecommendationSchema = createInsertSchema(recommendations).pick({

@@ -368,7 +368,8 @@ export class DatabaseStorage implements IStorage {
     const processedRecommender = {
       name: recommender.name,
       organization: recommender.organization || null,
-      industry: recommender.industry || null
+      industry: recommender.industry || null,
+      imageUrl: recommender.imageUrl || null
     };
     
     const [newRecommender] = await db
@@ -376,6 +377,29 @@ export class DatabaseStorage implements IStorage {
       .values(processedRecommender)
       .returning();
     return newRecommender;
+  }
+
+  async updateRecommender(id: number, recommenderData: Partial<InsertRecommender>): Promise<Recommender | undefined> {
+    // 既存のRecommenderをまず確認
+    const existingRecommender = await this.getRecommenderById(id);
+    if (!existingRecommender) {
+      return undefined;
+    }
+
+    // nullに変換して型の整合性を保つ
+    const processedData: Partial<Recommender> = {};
+    if (recommenderData.name !== undefined) processedData.name = recommenderData.name;
+    if (recommenderData.organization !== undefined) processedData.organization = recommenderData.organization || null;
+    if (recommenderData.industry !== undefined) processedData.industry = recommenderData.industry || null;
+    if (recommenderData.imageUrl !== undefined) processedData.imageUrl = recommenderData.imageUrl || null;
+    
+    const [updatedRecommender] = await db
+      .update(recommenders)
+      .set(processedData)
+      .where(eq(recommenders.id, id))
+      .returning();
+    
+    return updatedRecommender;
   }
 
   async searchRecommenders(query: string): Promise<Recommender[]> {
