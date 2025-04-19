@@ -20,6 +20,7 @@ import { useTheme } from "@/components/theme-provider";
 const Header = () => {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   const isActive = (path: string) => {
     return location === path;
@@ -62,6 +63,45 @@ const Header = () => {
           </div>
           
           <div className="flex items-center space-x-4">
+            {/* Theme toggle dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-secondary-light hover:text-white">
+                  {theme === "light" ? (
+                    <i className="ri-sun-line text-xl"></i>
+                  ) : theme === "dark" ? (
+                    <i className="ri-moon-line text-xl"></i>
+                  ) : (
+                    <i className="ri-computer-line text-xl"></i>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-paper border border-primary/20">
+                <DropdownMenuItem 
+                  className="cursor-pointer hover:bg-primary/10"
+                  onClick={() => setTheme("light")}
+                >
+                  <i className="ri-sun-line mr-2"></i>
+                  ライトモード
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="cursor-pointer hover:bg-primary/10"
+                  onClick={() => setTheme("dark")}
+                >
+                  <i className="ri-moon-line mr-2"></i>
+                  ダークモード
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="cursor-pointer hover:bg-primary/10"
+                  onClick={() => setTheme("system")}
+                >
+                  <i className="ri-computer-line mr-2"></i>
+                  システム設定
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Mobile navigation */}
             <div className="md:hidden">
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
@@ -99,6 +139,41 @@ const Header = () => {
                         管理者ログイン
                       </div>
                     </Link>
+                    
+                    {/* Theme toggles in mobile menu */}
+                    <div className="mt-4 border-t border-primary-light pt-4">
+                      <h3 className="px-3 text-secondary-light font-medium mb-2">テーマ設定</h3>
+                      <div 
+                        className="flex items-center px-3 py-2 text-secondary-light hover:bg-primary-light rounded-md cursor-pointer"
+                        onClick={() => {
+                          setTheme("light");
+                          setIsMobileMenuOpen(false);
+                        }}
+                      >
+                        <i className="ri-sun-line mr-2"></i>
+                        ライトモード
+                      </div>
+                      <div 
+                        className="flex items-center px-3 py-2 text-secondary-light hover:bg-primary-light rounded-md cursor-pointer"
+                        onClick={() => {
+                          setTheme("dark");
+                          setIsMobileMenuOpen(false);
+                        }}
+                      >
+                        <i className="ri-moon-line mr-2"></i>
+                        ダークモード
+                      </div>
+                      <div 
+                        className="flex items-center px-3 py-2 text-secondary-light hover:bg-primary-light rounded-md cursor-pointer"
+                        onClick={() => {
+                          setTheme("system");
+                          setIsMobileMenuOpen(false);
+                        }}
+                      >
+                        <i className="ri-computer-line mr-2"></i>
+                        システム設定
+                      </div>
+                    </div>
                   </div>
                 </SheetContent>
               </Sheet>
