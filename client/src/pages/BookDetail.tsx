@@ -174,7 +174,7 @@ const BookDetail = () => {
                 <div className="space-y-6">
                   {recommendations.length > 0 ? (
                     recommendations.map((rec: CompleteRecommendation) => (
-                      <div key={rec.id} className="bg-paper rounded-lg p-4">
+                      <div key={`${rec.bookId}_${rec.recommenderId}_${rec.id}`} className="bg-paper rounded-lg p-4">
                         <div className="flex items-center mb-3">
                           <div className="w-12 h-12 rounded-full bg-primary-light text-white flex items-center justify-center overflow-hidden mr-4">
                             <span className="text-xl">{rec.recommender.name.charAt(0)}</span>
