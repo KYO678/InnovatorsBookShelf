@@ -442,7 +442,18 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(recommenders, eq(recommendations.recommenderId, recommenders.id))
       .where(eq(recommendations.bookId, bookId));
     
-    return result as CompleteRecommendation[];
+    // フィルタリング: recommenderId ごとにユニークな推薦を保持する
+    const uniqueRecommendations: CompleteRecommendation[] = [];
+    const seenRecommenderIds = new Set<number>();
+    
+    for (const rec of result as CompleteRecommendation[]) {
+      if (!seenRecommenderIds.has(rec.recommenderId)) {
+        seenRecommenderIds.add(rec.recommenderId);
+        uniqueRecommendations.push(rec);
+      }
+    }
+    
+    return uniqueRecommendations;
   }
 
   async getCompleteRecommendationsByRecommenderId(recommenderId: number): Promise<CompleteRecommendation[]> {
@@ -464,7 +475,18 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(recommenders, eq(recommendations.recommenderId, recommenders.id))
       .where(eq(recommendations.recommenderId, recommenderId));
     
-    return result as CompleteRecommendation[];
+    // フィルタリング: bookId ごとにユニークな推薦を保持する
+    const uniqueRecommendations: CompleteRecommendation[] = [];
+    const seenBookIds = new Set<number>();
+    
+    for (const rec of result as CompleteRecommendation[]) {
+      if (!seenBookIds.has(rec.bookId)) {
+        seenBookIds.add(rec.bookId);
+        uniqueRecommendations.push(rec);
+      }
+    }
+    
+    return uniqueRecommendations;
   }
 
   // Create a complete book recommendation in one step
