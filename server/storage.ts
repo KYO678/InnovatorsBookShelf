@@ -22,6 +22,7 @@ export interface IStorage {
   getBookById(id: number): Promise<Book | undefined>;
   getBookByTitle(title: string): Promise<Book | undefined>;
   createBook(book: InsertBook): Promise<Book>;
+  updateBook(id: number, bookData: Partial<InsertBook>): Promise<Book | undefined>;
   searchBooks(query: string): Promise<Book[]>;
   
   // Recommender operations
@@ -29,6 +30,7 @@ export interface IStorage {
   getRecommenderById(id: number): Promise<Recommender | undefined>;
   getRecommenderByName(name: string): Promise<Recommender | undefined>;
   createRecommender(recommender: InsertRecommender): Promise<Recommender>;
+  updateRecommender(id: number, recommenderData: Partial<InsertRecommender>): Promise<Recommender | undefined>;
   searchRecommenders(query: string): Promise<Recommender[]>;
   
   // Recommendation operations
@@ -301,6 +303,31 @@ export class DatabaseStorage implements IStorage {
     
     const [newBook] = await db.insert(books).values(processedBook).returning();
     return newBook;
+  }
+
+  async updateBook(id: number, bookData: Partial<InsertBook>): Promise<Book | undefined> {
+    // 既存のBookをまず確認
+    const existingBook = await this.getBookById(id);
+    if (!existingBook) {
+      return undefined;
+    }
+
+    // nullに変換して型の整合性を保つ
+    const processedData: Partial<Book> = {};
+    if (bookData.title !== undefined) processedData.title = bookData.title;
+    if (bookData.author !== undefined) processedData.author = bookData.author;
+    if (bookData.category !== undefined) processedData.category = bookData.category || null;
+    if (bookData.imageUrl !== undefined) processedData.imageUrl = bookData.imageUrl || null;
+    if (bookData.publishYear !== undefined) processedData.publishYear = bookData.publishYear || null;
+    if (bookData.description !== undefined) processedData.description = bookData.description || null;
+    
+    const [updatedBook] = await db
+      .update(books)
+      .set(processedData)
+      .where(eq(books.id, id))
+      .returning();
+    
+    return updatedBook;
   }
 
   async searchBooks(query: string): Promise<Book[]> {
