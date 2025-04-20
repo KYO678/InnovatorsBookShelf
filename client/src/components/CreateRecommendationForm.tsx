@@ -11,10 +11,14 @@ import { Loader2 } from 'lucide-react';
 
 // 推薦作成用のスキーマ
 const createRecommendationSchema = z.object({
-  bookId: z.string().min(1, 'Book is required'),
-  recommenderId: z.string().min(1, 'Recommender is required'),
+  bookId: z.string().min(1, '書籍は必須です'),
+  recommenderId: z.string().min(1, '推薦者は必須です'),
   comment: z.string().optional(),
   reason: z.string().optional(),
+  recommendationDate: z.string().optional(),
+  recommendationMedium: z.string().optional(),
+  source: z.string().optional(),
+  sourceUrl: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof createRecommendationSchema>;
@@ -41,6 +45,10 @@ const CreateRecommendationForm = ({
       recommenderId: '',
       comment: '',
       reason: '',
+      recommendationDate: '',
+      recommendationMedium: '',
+      source: '',
+      sourceUrl: '',
     }
   });
 
