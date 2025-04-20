@@ -98,6 +98,27 @@ const Admin = () => {
     queryKey: ['/api/recommenders'],
   });
   
+  // 全書籍の推薦情報を取得
+  const { data: allRecommendations = [], isLoading: isLoadingRecommendations } = useQuery<CompleteRecommendation[]>({
+    queryKey: ['/api/books/all/recommendations'],
+    queryFn: async () => {
+      // すべての書籍から推薦情報を取得
+      const bookPromises = books.map(async (book) => {
+        const response = await fetch(`/api/books/${book.id}/recommenders`);
+        const recommendations = await response.json();
+        return recommendations.map((rec: any) => ({
+          ...rec,
+          book,
+          recommender: recommenders.find(r => r.id === rec.recommenderId)
+        }));
+      });
+      
+      const allRecs = await Promise.all(bookPromises);
+      return allRecs.flat();
+    },
+    enabled: books.length > 0 && recommenders.length > 0,
+  });
+  
   // Filter books and recommenders based on search queries
   const filteredBooks = books.filter((book) => {
     if (!searchBookQuery) return true;
@@ -116,6 +137,19 @@ const Admin = () => {
       recommender.name.toLowerCase().includes(query) || 
       (recommender.organization && recommender.organization.toLowerCase().includes(query)) ||
       (recommender.industry && recommender.industry.toLowerCase().includes(query))
+    );
+  });
+  
+  // 推薦情報のフィルタリング
+  const filteredRecommendations = allRecommendations.filter((recommendation) => {
+    if (!searchRecommendationQuery) return true;
+    const query = searchRecommendationQuery.toLowerCase();
+    return (
+      recommendation.book?.title.toLowerCase().includes(query) || 
+      recommendation.book?.author.toLowerCase().includes(query) ||
+      recommendation.recommender?.name.toLowerCase().includes(query) ||
+      (recommendation.comment && recommendation.comment.toLowerCase().includes(query)) ||
+      (recommendation.reason && recommendation.reason.toLowerCase().includes(query))
     );
   });
   
@@ -250,6 +284,7 @@ const Admin = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/books'] });
       queryClient.invalidateQueries({ queryKey: ['/api/recommenders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/books/all/recommendations'] });
       setIsCreateRecommendationDialogOpen(false);
       toast({
         title: "推薦の作成に成功しました",
@@ -265,9 +300,48 @@ const Admin = () => {
     },
   });
   
+  // Update recommendation mutation
+  const updateRecommendationMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const { id, ...recommendationData } = data;
+      const response = await apiRequest('PUT', `/api/admin/recommendations/${id}`, recommendationData);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/books'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/recommenders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/books/all/recommendations'] });
+      setIsEditRecommendationDialogOpen(false);
+      toast({
+        title: "推薦情報の更新に成功しました",
+        description: "推薦情報が更新されました。",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "エラーが発生しました",
+        description: error.message || "推薦情報の更新中にエラーが発生しました。",
+        variant: "destructive",
+      });
+    },
+  });
+  
   // Handler for creating a recommendation
   const handleCreateRecommendation = (data: any) => {
     createRecommendationMutation.mutate(data);
+  };
+  
+  // Handler for opening edit recommendation dialog
+  const openEditRecommendationDialog = (recommendation: CompleteRecommendation) => {
+    setSelectedRecommendation(recommendation);
+    setIsEditRecommendationDialogOpen(true);
+  };
+  
+  // Handler for updating a recommendation
+  const handleRecommendationUpdate = (data: any) => {
+    if (selectedRecommendation) {
+      updateRecommendationMutation.mutate({ ...data, id: selectedRecommendation.id });
+    }
   };
 
   // Add book mutation
@@ -396,6 +470,7 @@ const Admin = () => {
           <TabsTrigger value="import-csv">CSVインポート</TabsTrigger>
           <TabsTrigger value="manage-books">書籍の管理</TabsTrigger>
           <TabsTrigger value="manage-recommenders">推薦者の管理</TabsTrigger>
+          <TabsTrigger value="manage-recommendations">推薦情報の管理</TabsTrigger>
         </TabsList>
         
         <TabsContent value="add-book">
@@ -654,6 +729,102 @@ const Admin = () => {
             </CardContent>
           </Card>
         </TabsContent>
+        
+        <TabsContent value="manage-recommendations">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div>
+                <CardTitle>推薦情報の管理</CardTitle>
+                <CardDescription>
+                  すべての書籍と推薦者の紐づけを表示・編集します。
+                </CardDescription>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Input 
+                  placeholder="推薦情報を検索..." 
+                  className="max-w-xs"
+                  value={searchRecommendationQuery}
+                  onChange={(e) => setSearchRecommendationQuery(e.target.value)}
+                />
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoadingBooks || isLoadingRecommenders || isLoadingRecommendations ? (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-10 bg-gray-200 rounded"></div>
+                  <div className="h-10 bg-gray-200 rounded"></div>
+                  <div className="h-10 bg-gray-200 rounded"></div>
+                </div>
+              ) : allRecommendations.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>書籍</TableHead>
+                        <TableHead>推薦者</TableHead>
+                        <TableHead>コメント</TableHead>
+                        <TableHead>推薦時期</TableHead>
+                        <TableHead className="text-right">操作</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredRecommendations.map((recommendation: CompleteRecommendation) => (
+                        <TableRow key={recommendation.id}>
+                          <TableCell>{recommendation.id}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {recommendation.book?.imageUrl ? (
+                                <img 
+                                  src={recommendation.book.imageUrl} 
+                                  alt={recommendation.book?.title} 
+                                  className="w-8 h-12 object-cover rounded border border-gray-200"
+                                />
+                              ) : null}
+                              <span className="font-medium text-sm">{recommendation.book?.title}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {recommendation.recommender?.imageUrl ? (
+                                <img 
+                                  src={recommendation.recommender.imageUrl} 
+                                  alt={recommendation.recommender?.name} 
+                                  className="w-8 h-8 object-cover rounded-full border border-gray-200"
+                                />
+                              ) : null}
+                              <span>{recommendation.recommender?.name}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="max-w-xs truncate">
+                            {recommendation.comment || '-'}
+                          </TableCell>
+                          <TableCell>
+                            {recommendation.recommendationDate || '-'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openEditRecommendationDialog(recommendation)}
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              詳細編集
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="text-center py-10">
+                  <p className="text-gray-500">推薦情報が登録されていません。</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* 書籍編集ダイアログ */}
@@ -712,6 +883,28 @@ const Admin = () => {
             onSubmit={handleCreateRecommendation}
             isSubmitting={createRecommendationMutation.isPending}
           />
+        </DialogContent>
+      </Dialog>
+      
+      {/* 推薦情報編集ダイアログ */}
+      <Dialog open={isEditRecommendationDialogOpen} onOpenChange={setIsEditRecommendationDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>推薦情報の詳細編集</DialogTitle>
+            <DialogDescription>
+              推薦情報の詳細を編集します。コメント、推薦時期、媒体、理由などを更新できます。
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedRecommendation && (
+            <EditRecommendationForm 
+              recommendation={selectedRecommendation}
+              books={books}
+              recommenders={recommenders}
+              onSubmit={handleRecommendationUpdate}
+              isSubmitting={updateRecommendationMutation.isPending}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </main>
