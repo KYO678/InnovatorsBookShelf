@@ -615,6 +615,38 @@ export class DatabaseStorage implements IStorage {
     return newRecommendation;
   }
 
+  async updateRecommendation(id: number, recommendationData: Partial<InsertRecommendation>): Promise<Recommendation | undefined> {
+    // 既存の推薦情報を確認
+    const existingRecommendation = await this.getRecommendationById(id);
+    if (!existingRecommendation) {
+      return undefined;
+    }
+
+    // nullに変換して型の整合性を保つ
+    const processedData: Partial<Recommendation> = {};
+    if (recommendationData.bookId !== undefined) processedData.bookId = recommendationData.bookId;
+    if (recommendationData.recommenderId !== undefined) processedData.recommenderId = recommendationData.recommenderId;
+    if (recommendationData.comment !== undefined) processedData.comment = recommendationData.comment || null;
+    if (recommendationData.recommendationDate !== undefined) processedData.recommendationDate = recommendationData.recommendationDate || null;
+    if (recommendationData.recommendationMedium !== undefined) processedData.recommendationMedium = recommendationData.recommendationMedium || null;
+    if (recommendationData.source !== undefined) processedData.source = recommendationData.source || null;
+    if (recommendationData.sourceUrl !== undefined) processedData.sourceUrl = recommendationData.sourceUrl || null;
+    if (recommendationData.reason !== undefined) processedData.reason = recommendationData.reason || null;
+    
+    try {
+      const [updatedRecommendation] = await db
+        .update(recommendations)
+        .set(processedData)
+        .where(eq(recommendations.id, id))
+        .returning();
+      
+      return updatedRecommendation;
+    } catch (error) {
+      console.error(`Error updating recommendation with ID ${id}:`, error);
+      return undefined;
+    }
+  }
+
   // Combined operations
   async getBooksByRecommenderId(recommenderId: number): Promise<Book[]> {
     // Use JOIN to get books by recommender ID

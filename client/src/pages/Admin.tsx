@@ -10,7 +10,9 @@ import {
   BookRecommendationCSV, 
   Recommender,
   EditBookFormValues,
-  EditRecommenderFormValues
+  EditRecommenderFormValues,
+  CompleteRecommendation,
+  Recommendation
 } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { importBooksFromCSV } from "@/lib/csv-parser";
@@ -64,6 +66,7 @@ import {
 import AdminBookForm from "@/components/AdminBookForm";
 import EditBookForm from "@/components/EditBookForm";
 import EditRecommenderForm from "@/components/EditRecommenderForm";
+import EditRecommendationForm from "@/components/EditRecommendationForm";
 
 const Admin = () => {
   const { toast } = useToast();
@@ -74,8 +77,13 @@ const Admin = () => {
   const [isEditBookDialogOpen, setIsEditBookDialogOpen] = useState(false);
   const [isEditRecommenderDialogOpen, setIsEditRecommenderDialogOpen] = useState(false);
   const [isCreateRecommendationDialogOpen, setIsCreateRecommendationDialogOpen] = useState(false);
+  const [isEditRecommendationDialogOpen, setIsEditRecommendationDialogOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [selectedRecommender, setSelectedRecommender] = useState<Recommender | null>(null);
+  const [selectedRecommendation, setSelectedRecommendation] = useState<CompleteRecommendation | null>(null);
+  
+  // Search state for recommendations
+  const [searchRecommendationQuery, setSearchRecommendationQuery] = useState('');
   
   // Search state
   const [searchBookQuery, setSearchBookQuery] = useState('');
