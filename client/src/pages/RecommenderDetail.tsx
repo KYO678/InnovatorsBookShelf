@@ -178,6 +178,25 @@ const RecommenderDetail = () => {
                               </p>
                             </div>
                           )}
+                          {rec.source && (
+                            <div className="flex">
+                              <div className="text-sm font-medium text-gray-600 mr-2">出所情報:</div>
+                              <p className="text-gray-800">
+                                {rec.source}
+                                {rec.sourceUrl && (
+                                  <a 
+                                    href={rec.sourceUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="ml-2 text-accent hover:text-accent-dark underline"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <i className="ri-external-link-line"></i> リンク
+                                  </a>
+                                )}
+                              </p>
+                            </div>
+                          )}
                           {rec.reason && (
                             <div>
                               <div className="text-sm font-medium text-gray-600">推薦理由・背景:</div>

@@ -691,6 +691,8 @@ export class DatabaseStorage implements IStorage {
         comment: recommendations.comment,
         recommendationDate: recommendations.recommendationDate,
         recommendationMedium: recommendations.recommendationMedium,
+        source: recommendations.source,
+        sourceUrl: recommendations.sourceUrl,
         reason: recommendations.reason,
         book: books,
         recommender: recommenders
@@ -724,6 +726,8 @@ export class DatabaseStorage implements IStorage {
         comment: recommendations.comment,
         recommendationDate: recommendations.recommendationDate,
         recommendationMedium: recommendations.recommendationMedium,
+        source: recommendations.source,
+        sourceUrl: recommendations.sourceUrl,
         reason: recommendations.reason,
         book: books,
         recommender: recommenders
