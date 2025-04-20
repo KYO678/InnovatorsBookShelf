@@ -303,14 +303,31 @@ const Admin = () => {
   // Update recommendation mutation
   const updateRecommendationMutation = useMutation({
     mutationFn: async (data: any) => {
-      const { id, ...recommendationData } = data;
+      const { id, ...dataRaw } = data;
+      
+      // 空文字列をnullに変換
+      const recommendationData = Object.entries(dataRaw).reduce((acc, [key, value]) => {
+        acc[key] = value === '' ? null : value;
+        return acc;
+      }, {} as Record<string, any>);
+      
+      console.log('Sending update data:', { id, ...recommendationData });
+      
       const response = await apiRequest('PUT', `/api/admin/recommendations/${id}`, recommendationData);
       return response.json();
     },
     onSuccess: () => {
+      // すべての関連クエリを無効化
       queryClient.invalidateQueries({ queryKey: ['/api/books'] });
       queryClient.invalidateQueries({ queryKey: ['/api/recommenders'] });
       queryClient.invalidateQueries({ queryKey: ['/api/books/all/recommendations'] });
+      // 個別の本の推薦情報も無効化
+      if (selectedRecommendation) {
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/books/${selectedRecommendation.bookId}/recommenders`] 
+        });
+      }
+      
       setIsEditRecommendationDialogOpen(false);
       toast({
         title: "推薦情報の更新に成功しました",
@@ -318,6 +335,7 @@ const Admin = () => {
       });
     },
     onError: (error: any) => {
+      console.error('Error updating recommendation:', error);
       toast({
         title: "エラーが発生しました",
         description: error.message || "推薦情報の更新中にエラーが発生しました。",

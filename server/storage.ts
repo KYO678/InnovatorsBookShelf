@@ -622,6 +622,9 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
 
+    // デバッグログ
+    console.log(`Updating recommendation with ID ${id} with data:`, recommendationData);
+
     // nullに変換して型の整合性を保つ
     const processedData: Partial<Recommendation> = {};
     if (recommendationData.bookId !== undefined) processedData.bookId = recommendationData.bookId;
@@ -634,12 +637,16 @@ export class DatabaseStorage implements IStorage {
     if (recommendationData.reason !== undefined) processedData.reason = recommendationData.reason || null;
     
     try {
+      // デバッグログ
+      console.log(`Processed data for update:`, processedData);
+      
       const [updatedRecommendation] = await db
         .update(recommendations)
         .set(processedData)
         .where(eq(recommendations.id, id))
         .returning();
       
+      console.log(`Successfully updated recommendation:`, updatedRecommendation);
       return updatedRecommendation;
     } catch (error) {
       console.error(`Error updating recommendation with ID ${id}:`, error);
