@@ -39,6 +39,7 @@ export interface IStorage {
   getAllRecommendations(): Promise<Recommendation[]>;
   getRecommendationById(id: number): Promise<Recommendation | undefined>;
   createRecommendation(recommendation: InsertRecommendation): Promise<Recommendation>;
+  updateRecommendation(id: number, recommendationData: Partial<InsertRecommendation>): Promise<Recommendation | undefined>;
   
   // Combined operations
   getBooksByRecommenderId(recommenderId: number): Promise<Book[]>;
@@ -222,6 +223,20 @@ export class MemStorage implements IStorage {
     const newRecommendation: Recommendation = { ...recommendation, id };
     this.recommendationsMap.set(id, newRecommendation);
     return newRecommendation;
+  }
+  
+  async updateRecommendation(id: number, recommendationData: Partial<InsertRecommendation>): Promise<Recommendation | undefined> {
+    const recommendation = this.recommendationsMap.get(id);
+    if (!recommendation) return undefined;
+    
+    const updatedRecommendation: Recommendation = {
+      ...recommendation,
+      ...recommendationData,
+      id
+    };
+    
+    this.recommendationsMap.set(id, updatedRecommendation);
+    return updatedRecommendation;
   }
 
   // Combined operations

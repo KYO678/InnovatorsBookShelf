@@ -358,6 +358,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // 推薦情報更新エンドポイント
+  app.put('/api/admin/recommendations/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      // IDの検証
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid recommendation ID' });
+      }
+      
+      // 推薦情報の存在確認
+      const existingRecommendation = await dataStorage.getRecommendationById(id);
+      if (!existingRecommendation) {
+        return res.status(404).json({ message: 'Recommendation not found' });
+      }
+      
+      // 更新データから必要なフィールドを抽出
+      const {
+        bookId,
+        recommenderId,
+        comment,
+        recommendationDate,
+        recommendationMedium,
+        source,
+        sourceUrl,
+        reason
+      } = updateData;
+      
+      // 推薦情報を更新
+      const updatedRecommendation = await dataStorage.updateRecommendation(id, {
+        bookId,
+        recommenderId,
+        comment,
+        recommendationDate,
+        recommendationMedium,
+        source,
+        sourceUrl,
+        reason
+      });
+      
+      if (!updatedRecommendation) {
+        return res.status(404).json({ message: 'Failed to update recommendation' });
+      }
+      
+      // 本と推薦者の情報を取得して完全な推薦情報を作成
+      const book = await dataStorage.getBookById(updatedRecommendation.bookId);
+      const recommender = await dataStorage.getRecommenderById(updatedRecommendation.recommenderId);
+      
+      const completeRecommendation = {
+        ...updatedRecommendation,
+        book,
+        recommender
+      };
+      
+      res.json(completeRecommendation);
+    } catch (error) {
+      console.error('Error updating recommendation:', error);
+      res.status(500).json({ message: 'Error updating recommendation' });
+    }
+  });
+
   // Setup multer for image uploads
   const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
   fs.ensureDirSync(uploadsDir); // Make sure the uploads directory exists
