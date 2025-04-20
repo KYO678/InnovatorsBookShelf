@@ -157,11 +157,19 @@ const Admin = () => {
   const updateBookMutation = useMutation({
     mutationFn: async (data: EditBookFormValues & { id: number }) => {
       const { id, ...bookData } = data;
+      console.log(`Updating book #${id} with data:`, bookData);
       const response = await apiRequest('PUT', `/api/admin/books/${id}`, bookData);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // すべての関連クエリのキャッシュを無効化
       queryClient.invalidateQueries({ queryKey: ['/api/books'] });
+      // 個別の本のクエリも無効化
+      queryClient.invalidateQueries({ queryKey: [`/api/books/${variables.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/books/${variables.id}/recommenders`] });
+      // 全体的なキャッシュの更新
+      queryClient.invalidateQueries();
+      
       setIsEditBookDialogOpen(false);
       toast({
         title: "書籍の更新に成功しました",
@@ -169,6 +177,7 @@ const Admin = () => {
       });
     },
     onError: (error: any) => {
+      console.error('Error updating book:', error);
       toast({
         title: "エラーが発生しました",
         description: error.message || "書籍の更新中にエラーが発生しました。",
@@ -181,11 +190,21 @@ const Admin = () => {
   const updateRecommenderMutation = useMutation({
     mutationFn: async (data: EditRecommenderFormValues & { id: number }) => {
       const { id, ...recommenderData } = data;
+      console.log(`Updating recommender #${id} with data:`, recommenderData);
       const response = await apiRequest('PUT', `/api/admin/recommenders/${id}`, recommenderData);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // すべての関連クエリを無効化
       queryClient.invalidateQueries({ queryKey: ['/api/recommenders'] });
+      // 個別の推薦者のクエリも無効化
+      queryClient.invalidateQueries({ queryKey: [`/api/recommenders/${variables.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/recommenders/${variables.id}/books`] });
+      // 書籍リストとの関連も無効化
+      queryClient.invalidateQueries({ queryKey: ['/api/books'] }); 
+      // 全体的なキャッシュの更新
+      queryClient.invalidateQueries();
+      
       setIsEditRecommenderDialogOpen(false);
       toast({
         title: "推薦者の更新に成功しました",
@@ -193,6 +212,7 @@ const Admin = () => {
       });
     },
     onError: (error: any) => {
+      console.error('Error updating recommender:', error);
       toast({
         title: "エラーが発生しました",
         description: error.message || "推薦者の更新中にエラーが発生しました。",
@@ -228,17 +248,24 @@ const Admin = () => {
   // Book delete mutation
   const deleteBookMutation = useMutation({
     mutationFn: async (id: number) => {
+      console.log(`Deleting book #${id}`);
       const response = await apiRequest('DELETE', `/api/admin/books/${id}`);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // すべての関連キャッシュを無効化
       queryClient.invalidateQueries({ queryKey: ['/api/books'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/recommenders'] });
+      // 全体的なキャッシュの更新
+      queryClient.invalidateQueries();
+      
       toast({
         title: "書籍の削除に成功しました",
         description: "書籍および関連する推薦情報が削除されました。",
       });
     },
     onError: (error: any) => {
+      console.error('Error deleting book:', error);
       toast({
         title: "エラーが発生しました",
         description: error.message || "書籍の削除中にエラーが発生しました。",
@@ -250,17 +277,24 @@ const Admin = () => {
   // Recommender delete mutation
   const deleteRecommenderMutation = useMutation({
     mutationFn: async (id: number) => {
+      console.log(`Deleting recommender #${id}`);
       const response = await apiRequest('DELETE', `/api/admin/recommenders/${id}`);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // すべての関連キャッシュを無効化
       queryClient.invalidateQueries({ queryKey: ['/api/recommenders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/books'] });
+      // 全体的なキャッシュの更新
+      queryClient.invalidateQueries();
+      
       toast({
         title: "推薦者の削除に成功しました",
         description: "推薦者および関連する推薦情報が削除されました。",
       });
     },
     onError: (error: any) => {
+      console.error('Error deleting recommender:', error);
       toast({
         title: "エラーが発生しました",
         description: error.message || "推薦者の削除中にエラーが発生しました。",
@@ -316,17 +350,33 @@ const Admin = () => {
       const response = await apiRequest('PUT', `/api/admin/recommendations/${id}`, recommendationData);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       // すべての関連クエリを無効化
       queryClient.invalidateQueries({ queryKey: ['/api/books'] });
       queryClient.invalidateQueries({ queryKey: ['/api/recommenders'] });
       queryClient.invalidateQueries({ queryKey: ['/api/books/all/recommendations'] });
-      // 個別の本の推薦情報も無効化
+      
+      // 個別の本と推薦者の関連情報も無効化
       if (selectedRecommendation) {
+        // 本の詳細ページの推薦者リスト
         queryClient.invalidateQueries({ 
           queryKey: [`/api/books/${selectedRecommendation.bookId}/recommenders`] 
         });
+        // 推薦者の詳細ページの本リスト
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/recommenders/${selectedRecommendation.recommenderId}/books`] 
+        });
+        // 個別の本と推薦者の詳細情報
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/books/${selectedRecommendation.bookId}`] 
+        });
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/recommenders/${selectedRecommendation.recommenderId}`] 
+        });
       }
+      
+      // 全体的なキャッシュの更新
+      queryClient.invalidateQueries();
       
       setIsEditRecommendationDialogOpen(false);
       toast({
