@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import BookCard from "@/components/BookCard";
 import FilterModal from "@/components/FilterModal";
 import { Button } from "@/components/ui/button";
-import { Book } from "@shared/schema";
+import { Book, CompleteRecommendation } from "@shared/schema";
 
 const BookList = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -11,11 +11,54 @@ const BookList = () => {
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [bookRecommendersMap, setBookRecommendersMap] = useState<{[key: number]: number}>({});
   const booksPerPage = 9;
 
-  const { data: books = [], isLoading } = useQuery({
+  const { data: books = [], isLoading: isLoadingBooks } = useQuery<Book[]>({
     queryKey: ["/api/books"],
   });
+  
+  // 各書籍の推薦者数を取得する - 効率的なバージョン
+  const fetchRecommendersCount = async () => {
+    if (!books || books.length === 0) return;
+    
+    const map: {[key: number]: number} = {};
+    const bookIds = books.map(book => book.id);
+    
+    // 並行して全ての推薦者情報を取得
+    const promises = bookIds.map(async (id) => {
+      try {
+        const response = await fetch(`/api/books/${id}/recommenders`);
+        if (response.ok) {
+          const data = await response.json();
+          return { id, count: Array.isArray(data) ? data.length : 0 };
+        }
+        return { id, count: 0 };
+      } catch (error) {
+        console.error(`Failed to fetch recommenders for book ${id}:`, error);
+        return { id, count: 0 };
+      }
+    });
+    
+    // 全てのリクエストが完了するのを待機
+    const results = await Promise.all(promises);
+    
+    // 結果を集約
+    results.forEach(result => {
+      map[result.id] = result.count;
+    });
+    
+    setBookRecommendersMap(map);
+  };
+  
+  // 書籍データが読み込まれたら推薦者数を取得
+  useEffect(() => {
+    if (books && books.length > 0) {
+      fetchRecommendersCount();
+    }
+  }, [books]);
+  
+  const isLoading = isLoadingBooks || (books.length > 0 && Object.keys(bookRecommendersMap).length === 0);
 
   // Handle search change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,6 +93,11 @@ const BookList = () => {
         return a.author.localeCompare(b.author);
       } else if (sortBy === "category") {
         return (a.category || "").localeCompare(b.category || "");
+      } else if (sortBy === "recommenders") {
+        // 推薦者数の多い順にソート（降順）
+        const aCount = bookRecommendersMap[a.id] || 0;
+        const bCount = bookRecommendersMap[b.id] || 0;
+        return bCount - aCount; // 降順（多い順）
       }
       return 0;
     });
@@ -98,6 +146,7 @@ const BookList = () => {
               <option value="title">タイトル順</option>
               <option value="author">著者名順</option>
               <option value="category">カテゴリー順</option>
+              <option value="recommenders">推薦者数順</option>
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
               <i className="ri-arrow-down-s-line"></i>
