@@ -141,7 +141,15 @@ const RecommenderDetail = () => {
                           className="relative h-32 w-24 mx-auto md:mx-0 cursor-pointer"
                           onClick={() => setLocation(`/books/${rec.book.id}`)}
                         >
-                          <BookSpine title={rec.book.title} />
+                          {rec.book.imageUrl ? (
+                            <img 
+                              src={rec.book.imageUrl} 
+                              alt={rec.book.title} 
+                              className="w-full h-full object-cover rounded shadow-sm" 
+                            />
+                          ) : (
+                            <BookSpine title={rec.book.title} />
+                          )}
                         </div>
                       </div>
                       

@@ -176,8 +176,21 @@ const BookDetail = () => {
                     recommendations.map((rec: CompleteRecommendation) => (
                       <div key={`${rec.bookId}_${rec.recommenderId}_${rec.id}`} className="bg-paper rounded-lg p-4">
                         <div className="flex items-center mb-3">
-                          <div className="w-12 h-12 rounded-full bg-primary-light text-white flex items-center justify-center overflow-hidden mr-4">
-                            <span className="text-xl">{rec.recommender.name.charAt(0)}</span>
+                          <div 
+                            className="w-12 h-12 rounded-full mr-4 overflow-hidden cursor-pointer"
+                            onClick={() => setLocation(`/recommenders/${rec.recommender.id}`)}
+                          >
+                            {rec.recommender.imageUrl ? (
+                              <img 
+                                src={rec.recommender.imageUrl} 
+                                alt={rec.recommender.name} 
+                                className="w-full h-full object-cover" 
+                              />
+                            ) : (
+                              <div className="w-full h-full rounded-full bg-primary-light text-white flex items-center justify-center">
+                                <span className="text-xl">{rec.recommender.name.charAt(0)}</span>
+                              </div>
+                            )}
                           </div>
                           <div>
                             <h3 
