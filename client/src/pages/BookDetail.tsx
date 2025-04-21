@@ -221,22 +221,51 @@ const BookDetail = () => {
                           )}
                           
                           {rec.source && (
-                            <div className="flex">
-                              <div className="text-sm font-medium text-gray-600 mr-2">出所情報:</div>
-                              <p className="text-gray-800">
-                                {rec.source}
-                                {rec.sourceUrl && (
-                                  <a 
-                                    href={rec.sourceUrl} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="ml-2 text-accent hover:text-accent-dark underline"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <i className="ri-external-link-line"></i> リンク
-                                  </a>
-                                )}
-                              </p>
+                            <div>
+                              <div className="text-sm font-medium text-gray-600 mb-1">出所情報:</div>
+                              {rec.source.includes('|') ? (
+                                <div className="space-y-1">
+                                  {rec.source.split('|').map((source, idx) => {
+                                    const sourceUrls = rec.sourceUrl ? rec.sourceUrl.split('|') : [];
+                                    const url = sourceUrls[idx] ? sourceUrls[idx].trim() : null;
+                                    
+                                    return (
+                                      <div key={idx} className="flex items-start">
+                                        <span className="text-gray-500 mr-2">•</span>
+                                        <p className="text-gray-800">
+                                          {source.trim()}
+                                          {url && (
+                                            <a 
+                                              href={url} 
+                                              target="_blank" 
+                                              rel="noopener noreferrer"
+                                              className="ml-2 text-accent hover:text-accent-dark underline"
+                                              onClick={(e) => e.stopPropagation()}
+                                            >
+                                              <i className="ri-external-link-line"></i> リンク
+                                            </a>
+                                          )}
+                                        </p>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              ) : (
+                                <p className="text-gray-800">
+                                  {rec.source}
+                                  {rec.sourceUrl && (
+                                    <a 
+                                      href={rec.sourceUrl} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="ml-2 text-accent hover:text-accent-dark underline"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <i className="ri-external-link-line"></i> リンク
+                                    </a>
+                                  )}
+                                </p>
+                              )}
                             </div>
                           )}
                           {rec.reason && (
