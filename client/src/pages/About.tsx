@@ -104,11 +104,11 @@ const About = () => {
                 <div className="space-y-2">
                   <div className="flex items-center">
                     <i className="ri-mail-line text-primary mr-2"></i>
-                    <span className="text-sm">info@legends-bookshelf.example.com</span>
+                    <span className="text-sm">info@innovators-bookshelf.example.com</span>
                   </div>
                   <div className="flex items-center">
                     <i className="ri-twitter-x-line text-primary mr-2"></i>
-                    <span className="text-sm">@LegendsBookshelf</span>
+                    <span className="text-sm">@InnovatorsBooks</span>
                   </div>
                 </div>
               </div>

@@ -8,7 +8,7 @@ const Footer = () => {
           <div className="mb-8 md:mb-0">
             <div className="flex items-center">
               <i className="ri-book-open-line text-secondary-light text-3xl"></i>
-              <h2 className="text-xl font-serif font-bold ml-2">Legend's Book Shelf</h2>
+              <h2 className="text-xl font-serif font-bold ml-2">Innovator's Book Shelf</h2>
             </div>
             <p className="mt-2 text-secondary-light text-sm">
               著名人が推薦する書籍をまとめたデータベース。<br />
@@ -93,7 +93,7 @@ const Footer = () => {
           </div>
           
           <p className="mt-8 text-sm text-secondary-light md:mt-0">
-            &copy; {new Date().getFullYear()} Legend's Book Shelf. All rights reserved.
+            &copy; {new Date().getFullYear()} Innovator's Book Shelf. All rights reserved.
           </p>
         </div>
       </div>
