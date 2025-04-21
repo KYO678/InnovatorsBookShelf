@@ -34,7 +34,7 @@ const Header = () => {
             <Link href="/">
               <div className="flex items-center space-x-2 cursor-pointer">
                 <i className="ri-book-open-line text-secondary-light text-3xl"></i>
-                <h1 className="text-secondary-light font-serif text-2xl font-bold">Legend's Book Shelf</h1>
+                <h1 className="text-secondary-light font-serif text-2xl font-bold">Innovator's Book Shelf</h1>
               </div>
             </Link>
           </div>

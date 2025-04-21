@@ -4,7 +4,7 @@ const About = () => {
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <h1 className="text-3xl font-serif font-bold text-gray-900 mb-8">
-        Legend's Book Shelf について
+        Innovator's Book Shelf について
       </h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -17,20 +17,20 @@ const About = () => {
               
               <div className="prose max-w-none">
                 <p>
-                  Legend's Book Shelfは、ビジネスリーダーや影響力のある著名人が推薦する書籍をまとめたデータベースです。
-                  ビル・ゲイツ、イーロン・マスク、ウォーレン・バフェットなどの成功者たちが読んできた本を知ることで、
+                  Innovator's Book Shelfは、ビジネスリーダーやイノベーターなど影響力のある著名人が推薦する書籍をまとめたデータベースです。
+                  ビル・ゲイツ、イーロン・マスク、ウォーレン・バフェットなどの革新者たちが読んできた本を知ることで、
                   あなたも彼らの知識と知恵に触れることができます。
                 </p>
                 
                 <p>
                   このサイトの特徴は、書籍から推薦者、推薦者から書籍へと双方向に探索できることです。
                   気になる書籍を見つけたら、その本を推薦した著名人を知ることができ、
-                  尊敬する著名人がいれば、その人が推薦する書籍をすべて見ることができます。
+                  尊敬するイノベーターがいれば、その人が推薦する書籍をすべて見ることができます。
                 </p>
                 
                 <p>
-                  Legend's Book Shelfは、読書好きな方々、自己啓発に取り組む方々、
-                  ビジネスリーダーたちの思考を理解したい方々にとって、
+                  Innovator's Book Shelfは、読書好きな方々、自己啓発に取り組む方々、
+                  イノベーターたちの思考を理解したい方々にとって、
                   新たな読書体験と発見の場を提供します。
                 </p>
               </div>
