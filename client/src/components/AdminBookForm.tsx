@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { combinedInsertSchema, CombinedInsert } from "@shared/schema";
+import { combinedInsertSchema, CombinedInsert, Recommender } from "@shared/schema";
 import {
   Form,
   FormControl,
@@ -12,14 +13,29 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from "@/components/ui/tabs";
+import { PlusCircle, User } from "lucide-react";
 
 interface AdminBookFormProps {
   form: ReturnType<typeof useForm<CombinedInsert>>;
   onSubmit: (data: CombinedInsert) => void;
   isSubmitting: boolean;
+  recommenders?: Recommender[];
 }
 
-const AdminBookForm = ({ form, onSubmit, isSubmitting }: AdminBookFormProps) => {
+const AdminBookForm = ({ form, onSubmit, isSubmitting, recommenders = [] }: AdminBookFormProps) => {
   // Book categories for select dropdown
   const categories = [
     "ビジネス",
@@ -33,10 +49,31 @@ const AdminBookForm = ({ form, onSubmit, isSubmitting }: AdminBookFormProps) => 
     "自己啓発",
     "哲学",
   ];
+  
+  // 推薦者の選択タイプ
+  const [recommenderType, setRecommenderType] = useState<'existing' | 'new'>('new');
+  const [selectedRecommenderId, setSelectedRecommenderId] = useState<string>("");
+
+  // フォーム送信時の処理
+  const handleFormSubmit = (data: CombinedInsert) => {
+    // 既存の推薦者を選択している場合、recommenderNameを設定
+    if (recommenderType === 'existing' && selectedRecommenderId) {
+      const selectedRecommender = recommenders.find(r => r.id.toString() === selectedRecommenderId);
+      if (selectedRecommender) {
+        // 選択された推薦者情報で上書き
+        data.recommenderName = selectedRecommender.name;
+        data.recommenderOrg = selectedRecommender.organization || '';
+        data.industry = selectedRecommender.industry || '';
+      }
+    }
+    
+    // 送信
+    onSubmit(data);
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Book Information */}
           <div className="space-y-4">
@@ -145,47 +182,98 @@ const AdminBookForm = ({ form, onSubmit, isSubmitting }: AdminBookFormProps) => 
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-gray-800 border-b pb-2">推薦者情報</h3>
             
-            <FormField
-              control={form.control}
-              name="recommenderName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>推薦者名 <span className="text-red-500">*</span></FormLabel>
-                  <FormControl>
-                    <Input placeholder="推薦者の名前を入力" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <Tabs defaultValue="new" onValueChange={(val) => setRecommenderType(val as 'existing' | 'new')}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="existing" disabled={recommenders.length === 0}>
+                  <User className="w-4 h-4 mr-2" />
+                  既存の推薦者を選択
+                </TabsTrigger>
+                <TabsTrigger value="new">
+                  <PlusCircle className="w-4 h-4 mr-2" />
+                  新規推薦者を追加
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="existing" className="space-y-4 pt-4">
+                {recommenders.length > 0 ? (
+                  <div>
+                    <FormLabel>推薦者を選択 <span className="text-red-500">*</span></FormLabel>
+                    <Select 
+                      value={selectedRecommenderId} 
+                      onValueChange={(value) => {
+                        setSelectedRecommenderId(value);
+                        // 選択された推薦者の情報をフォームにセット
+                        const selectedRecommender = recommenders.find(r => r.id.toString() === value);
+                        if (selectedRecommender) {
+                          form.setValue("recommenderName", selectedRecommender.name);
+                          form.setValue("recommenderOrg", selectedRecommender.organization || "");
+                          form.setValue("industry", selectedRecommender.industry || "");
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="推薦者を選択してください" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {recommenders.map((recommender) => (
+                          <SelectItem key={recommender.id} value={recommender.id.toString()}>
+                            {recommender.name} {recommender.organization ? `(${recommender.organization})` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-gray-500">
+                    登録済みの推薦者がありません。新規追加タブから推薦者を登録してください。
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="new" className="space-y-4 pt-4">
+                <FormField
+                  control={form.control}
+                  name="recommenderName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>推薦者名 <span className="text-red-500">*</span></FormLabel>
+                      <FormControl>
+                        <Input placeholder="推薦者の名前を入力" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="recommenderOrg"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>推薦者の所属</FormLabel>
-                  <FormControl>
-                    <Input placeholder="所属組織や役職を入力" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="recommenderOrg"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>推薦者の所属</FormLabel>
+                      <FormControl>
+                        <Input placeholder="所属組織や役職を入力" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="industry"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>業界</FormLabel>
-                  <FormControl>
-                    <Input placeholder="業界を入力（例：テクノロジー、金融）" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="industry"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>業界</FormLabel>
+                      <FormControl>
+                        <Input placeholder="業界を入力（例：テクノロジー、金融）" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
 
