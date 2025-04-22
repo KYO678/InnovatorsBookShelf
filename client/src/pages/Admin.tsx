@@ -553,7 +553,8 @@ const Admin = () => {
               <AdminBookForm 
                 form={form} 
                 onSubmit={onSubmit} 
-                isSubmitting={addBookMutation.isPending} 
+                isSubmitting={addBookMutation.isPending}
+                recommenders={recommenders}
               />
             </CardContent>
           </Card>
