@@ -784,18 +784,27 @@ export class DatabaseStorage implements IStorage {
         book = updatedBook;
       }
 
-      // Check if recommender already exists or create a new one
-      let recommender = await this.getRecommenderByName(data.recommenderName);
+      // 全ての既存の推薦者を取得して、名前で検索（大文字小文字を区別せず）
+      const allRecommenders = await tx.select().from(recommenders);
+      let recommender = allRecommenders.find(
+        r => r.name.toLowerCase() === data.recommenderName.toLowerCase()
+      );
+      
+      // 推薦者が存在しない場合のみ新規作成
       if (!recommender) {
+        console.log(`Creating new recommender: ${data.recommenderName}`);
         const [newRecommender] = await tx
           .insert(recommenders)
           .values({
             name: data.recommenderName,
             organization: data.recommenderOrg || null,
-            industry: data.industry || null
+            industry: data.industry || null,
+            imageUrl: null
           })
           .returning();
         recommender = newRecommender;
+      } else {
+        console.log(`Using existing recommender: ${recommender.name} (ID: ${recommender.id})`);
       }
 
       // Create the recommendation
