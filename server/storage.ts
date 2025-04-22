@@ -827,6 +827,13 @@ export class DatabaseStorage implements IStorage {
     let successCount = 0;
     const processedBooks = new Set<string>();
     
+    // まず全ての推薦者を取得して、既存の推薦者のマップを作成
+    const allRecommenders = await this.getAllRecommenders();
+    const recommenderMap = new Map<string, Recommender>();
+    allRecommenders.forEach(recommender => {
+      recommenderMap.set(recommender.name.toLowerCase(), recommender);
+    });
+    
     for (const item of items) {
       try {
         // Create a unique key for this book+recommender combination to prevent duplicates
@@ -840,25 +847,26 @@ export class DatabaseStorage implements IStorage {
         
         // Check if this book already exists
         const existingBook = await this.getBookByTitle(item.title);
+        let existingRecommender = null;
         
-        // If book exists, check if recommender exists
-        if (existingBook) {
-          const existingRecommender = await this.getRecommenderByName(item.recommenderName);
+        // カスタムマップを使用して既存の推薦者をチェック（大文字小文字を区別しないように）
+        if (recommenderMap.has(item.recommenderName.toLowerCase())) {
+          existingRecommender = recommenderMap.get(item.recommenderName.toLowerCase());
+        }
+        
+        // If both book and recommender exist, check if recommendation exists
+        if (existingBook && existingRecommender) {
+          // Get all recommendations for this book
+          const bookRecommendations = await this.getCompleteRecommendationsByBookId(existingBook.id);
           
-          // If both book and recommender exist, check if recommendation exists
-          if (existingRecommender) {
-            // Get all recommendations for this book
-            const bookRecommendations = await this.getCompleteRecommendationsByBookId(existingBook.id);
-            
-            // Check if a recommendation from this recommender already exists
-            const hasRecommendation = bookRecommendations.some(
-              rec => rec.recommenderId === existingRecommender.id
-            );
-            
-            if (hasRecommendation) {
-              console.log(`Skipping existing recommendation: ${item.title} by ${item.recommenderName}`);
-              continue;
-            }
+          // Check if a recommendation from this recommender already exists
+          const hasRecommendation = bookRecommendations.some(
+            rec => rec.recommenderId === existingRecommender!.id
+          );
+          
+          if (hasRecommendation) {
+            console.log(`Skipping existing recommendation: ${item.title} by ${item.recommenderName}`);
+            continue;
           }
         }
         
