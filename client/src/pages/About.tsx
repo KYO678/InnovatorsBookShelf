@@ -72,22 +72,22 @@ const About = () => {
               <div className="space-y-4">
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">総書籍数</h3>
-                  <p className="text-3xl font-bold text-primary">16+</p>
+                  <p className="text-3xl font-bold text-primary">221</p>
                 </div>
                 
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">総推薦者数</h3>
-                  <p className="text-3xl font-bold text-primary">10+</p>
+                  <p className="text-3xl font-bold text-primary">23</p>
                 </div>
                 
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">カテゴリー数</h3>
-                  <p className="text-3xl font-bold text-primary">8+</p>
+                  <p className="text-3xl font-bold text-primary">10</p>
                 </div>
                 
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">推薦数</h3>
-                  <p className="text-3xl font-bold text-primary">16+</p>
+                  <p className="text-3xl font-bold text-primary">656</p>
                 </div>
               </div>
               
@@ -134,6 +134,10 @@ const About = () => {
                   <div>
                     <h3 className="text-sm font-medium text-gray-700">2024年3月</h3>
                     <p className="text-sm text-gray-600">UI/UXの改善</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700">2024年4月</h3>
+                    <p className="text-sm text-gray-600">推薦者選択機能を追加・CSVインポート強化</p>
                   </div>
                 </div>
               </CardContent>
