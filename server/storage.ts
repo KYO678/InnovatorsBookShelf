@@ -853,8 +853,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Import from CSV
-  async importFromCSV(items: BookRecommendationCSV[]): Promise<number> {
+  async importFromCSV(items: BookRecommendationCSV[]): Promise<{count: number, skipped: number, total: number}> {
     let successCount = 0;
+    let skippedCount = 0;
     const processedBooks = new Set<string>();
     
     // まず全ての推薦者を取得して、既存の推薦者のマップを作成
@@ -872,6 +873,7 @@ export class DatabaseStorage implements IStorage {
         // Skip if we've already processed this book+recommender combination
         if (processedBooks.has(uniqueKey)) {
           console.log(`Skipping duplicate import: ${item.title} by ${item.recommenderName}`);
+          skippedCount++;
           continue;
         }
         
@@ -928,7 +930,11 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    return successCount;
+    return {
+      count: successCount,
+      skipped: skippedCount,
+      total: items.length
+    };
   }
 }
 

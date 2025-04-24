@@ -224,14 +224,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Attempting to import ${items.length} items from CSV`);
       
-      // Use the importFromCSV method to process all items at once and get actual import count
-      const importedCount = await dataStorage.importFromCSV(items);
+      // Use the importFromCSV method to process all items at once and get detailed import results
+      const result = await dataStorage.importFromCSV(items);
       
       res.status(201).json({ 
-        message: `Successfully imported ${importedCount} book recommendations`,
-        count: importedCount,
-        total: items.length,
-        skipped: items.length - importedCount
+        message: `Successfully imported ${result.count} book recommendations, skipped ${result.skipped}`,
+        count: result.count,
+        total: result.total,
+        skipped: result.skipped
       });
     } catch (error) {
       console.error('Error importing from CSV:', error);
