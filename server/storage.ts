@@ -51,7 +51,7 @@ export interface IStorage {
   createCompleteRecommendation(data: CombinedInsert): Promise<CompleteRecommendation>;
   
   // Import from CSV
-  importFromCSV(items: BookRecommendationCSV[]): Promise<number>;
+  importFromCSV(items: BookRecommendationCSV[]): Promise<{count: number, skipped: number, total: number}>;
 }
 
 export class MemStorage implements IStorage {
@@ -341,9 +341,17 @@ export class MemStorage implements IStorage {
   }
 
   // Import from CSV
-  async importFromCSV(items: BookRecommendationCSV[]): Promise<number> {
+  async importFromCSV(items: BookRecommendationCSV[]): Promise<{count: number, skipped: number, total: number}> {
     let successCount = 0;
+    let skippedCount = 0;
     const processedBooks = new Set<string>();
+    
+    // まず全ての推薦者を取得して、既存の推薦者のマップを作成
+    const allRecommenders = await this.getAllRecommenders();
+    const recommenderMap = new Map<string, Recommender>();
+    allRecommenders.forEach(recommender => {
+      recommenderMap.set(recommender.name.toLowerCase(), recommender);
+    });
     
     for (const item of items) {
       try {
@@ -353,7 +361,15 @@ export class MemStorage implements IStorage {
         // Skip if we've already processed this book+recommender combination
         if (processedBooks.has(uniqueKey)) {
           console.log(`Skipping duplicate import: ${item.title} by ${item.recommenderName}`);
+          skippedCount++;
           continue;
+        }
+        
+        // カスタムマップを使用して既存の推薦者をチェック（大文字小文字を区別しないように）
+        let existingRecommender = null;
+        if (recommenderMap.has(item.recommenderName.toLowerCase())) {
+          existingRecommender = recommenderMap.get(item.recommenderName.toLowerCase());
+          console.log(`Found existing recommender: ${existingRecommender.name} (ID: ${existingRecommender.id})`);
         }
         
         // For MemStorage, we'll just count each successfully imported item
@@ -375,10 +391,15 @@ export class MemStorage implements IStorage {
         successCount++;
       } catch (error) {
         console.error(`Error importing item: ${JSON.stringify(item)}`, error);
+        skippedCount++;
       }
     }
     
-    return successCount;
+    return {
+      count: successCount,
+      skipped: skippedCount,
+      total: items.length
+    };
   }
 }
 
