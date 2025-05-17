@@ -927,6 +927,7 @@ export class DatabaseStorage implements IStorage {
         successCount++;
       } catch (error) {
         console.error(`Error importing item: ${JSON.stringify(item)}`, error);
+        skippedCount++;
       }
     }
     
